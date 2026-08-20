@@ -55,6 +55,9 @@
           "backgroundColor": "#14101b"
         }
       ]
-    ]
+    ],
+    "experiments": {
+      "baseUrl": "/DeepTalk"
+    }
   }
 }

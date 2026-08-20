@@ -136,6 +136,20 @@ npm run build:web
 Hosting, Vercel, Netlify, Cloudflare Pages, S3. `web.output` is `single`, so
 it is a plain SPA with no routing and no server needed.
 
+### Where it is deployed
+
+Every push to `master` builds the web export and publishes it to GitHub Pages
+via `.github/workflows/deploy-web.yml`:
+
+**https://sirisakunknowss.github.io/DeepTalk/**
+
+A GitHub Pages project site is served from `/<repo>`, not from the domain root,
+so `experiments.baseUrl` in `app.json` is set to `/DeepTalk` — without it every
+asset URL in the export would point one directory too high and the page would
+load blank. Change the repo name and that value changes with it. Moving to a
+custom domain (or to EAS Hosting, Vercel, or any host serving from the root)
+means dropping `baseUrl` again.
+
 What was checked in a browser at 375×812: every screen, the card swipe and
 deal-in animation, the turn timer, the TH/EN switch, and persistence — web
 storage is `localStorage`, so kept questions, your pack and the chosen language
