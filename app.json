@@ -1,25 +1,60 @@
 {
   "expo": {
     "name": "DeepTalk",
-    "slug": "DeepTalk",
+    "slug": "deeptalk",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "scheme": "deeptalk",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#14101b",
+    "primaryColor": "#ff7a54",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.deeptalk.app",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "infoPlist": {
+        "UIUserInterfaceStyle": "Dark",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.deeptalk.app",
+      "versionCode": 1,
+      "predictiveBackGestureEnabled": false,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0d0a12",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      },
-      "predictiveBackGestureEnabled": false
+      }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single",
+      "name": "DeepTalk",
+      "shortName": "DeepTalk",
+      "lang": "en",
+      "themeColor": "#14101b",
+      "backgroundColor": "#14101b",
+      "description": "Conversation cards for people sitting across from each other.",
+      "display": "standalone"
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 190,
+          "resizeMode": "contain",
+          "backgroundColor": "#14101b"
+        }
+      ]
+    ]
   }
 }
