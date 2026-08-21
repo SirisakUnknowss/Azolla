@@ -3,7 +3,7 @@ import { AppState, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { QuestionCard, type QuestionCardHandle } from '../components/QuestionCard';
-import { bandFor, startIndexFor, type ModeId, type Relationship } from '../data/decks';
+import { bandFor, type ModeId, type Relationship } from '../data/decks';
 import { useI18n } from '../i18n';
 import { useStore } from '../state/store';
 import { color, ink, radius, surface, type Typo } from '../theme/tokens';
@@ -13,6 +13,8 @@ import { notifyWarning, tapLight, tapMedium } from '../util/haptics';
 const LOW_TIME_SECONDS = 15;
 
 export type SessionConfig = {
+  /** Bumped on every deal; keys the screen so a new deck resets the session. */
+  id: number;
   /** Relationship the kept questions are filed under. */
   rel: Relationship;
   /** What the card's top-left label reads — a relationship or a pack name. */
@@ -21,25 +23,29 @@ export type SessionConfig = {
   depth: number;
   mode: ModeId;
   deck: readonly string[];
-  /** Where in the deck to open. */
-  startIndex: number;
 };
 
 type Props = {
   config: SessionConfig;
   onExit: () => void;
-  onDepthChange: (depth: number) => void;
+  /** Deals a new, deeper deck — the screen is remounted with it. */
+  onGoDeeper: (depth: number) => void;
 };
 
-export function SessionScreen({ config, onExit, onDepthChange }: Props) {
+export function SessionScreen({ config, onExit, onGoDeeper }: Props) {
   const insets = useSafeAreaInsets();
-  const { players, saved, prefs, toggleSaved } = useStore();
+  const { players, saved, prefs, toggleSaved, markSeen } = useStore();
   const { t, content, typo } = useI18n();
   const styles = useStyles(makeStyles);
   const cardRef = useRef<QuestionCardHandle>(null);
 
-  const [idx, setIdx] = useState(config.startIndex);
-  const [depth, setDepth] = useState(config.depth);
+  const [idx, setIdx] = useState(0);
+  // Read through a ref so `advance` keeps one identity for the whole session:
+  // it is handed to the card as an animation callback, and a new function per
+  // card would rebuild the card's imperative handle on every deal.
+  const idxRef = useRef(0);
+  idxRef.current = idx;
+  const depth = config.depth;
   const [secs, setSecs] = useState(0);
   const [running, setRunning] = useState(prefs.showTimer);
   const firedTimeUp = useRef(false);
@@ -78,10 +84,13 @@ export function SessionScreen({ config, onExit, onDepthChange }: Props) {
   }, [running, left]);
 
   const advance = useCallback(() => {
+    // Record the card being left behind, so later sessions open on new ones.
+    const current = deck[idxRef.current];
+    if (current) markSeen(current);
     setIdx((i) => Math.min(i + 1, deck.length));
     setSecs(0);
     firedTimeUp.current = false;
-  }, [deck.length]);
+  }, [deck, markSeen]);
 
   const flyNext = useCallback(() => {
     tapMedium();
@@ -89,16 +98,9 @@ export function SessionScreen({ config, onExit, onDepthChange }: Props) {
   }, []);
 
   const goDeeper = useCallback(() => {
-    const next = Math.min(10, depth + 3);
     tapMedium();
-    setDepth(next);
-    onDepthChange(next);
-    // Clamp into range: a short pack deck can be shorter than the level's
-    // usual entry point, and the button must always deal a card.
-    setIdx(Math.min(startIndexFor(next), Math.max(0, deck.length - 1)));
-    setSecs(0);
-    firedTimeUp.current = false;
-  }, [deck.length, depth, onDepthChange]);
+    onGoDeeper(Math.min(10, depth + 3));
+  }, [depth, onGoDeeper]);
 
   const savedCount = saved.length;
   const isCurrentSaved = useMemo(

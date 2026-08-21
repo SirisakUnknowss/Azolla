@@ -5,7 +5,6 @@ export type Content = {
   /** Display name of each relationship. The key stays English — it is an id. */
   rel: Record<Relationship, string>;
   blurb: Record<Relationship, string>;
-  decks: Record<Relationship, readonly string[]>;
   modes: Record<ModeId, { name: string; blurb: string }>;
   packs: Record<
     DeckPackId,

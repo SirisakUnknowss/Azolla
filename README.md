@@ -24,19 +24,31 @@ Built from the [Deeptalk Claude Design canvas](https://claude.ai/design/p/9ed509
 ### Content
 
 - **7 relationship decks** — New friend, Old friend, Best friend, Lover,
-  Family, Colleague, Stranger (9 questions each).
+  Family, Colleague, Stranger. Each carries **100 questions**: ten at every
+  level from 1 to 10.
 - **4 themed packs** — First night out, Ten years later, After midnight,
   The repair pack (9 questions each).
 - **Your own pack** — questions you write, playable like any other deck.
 - **14 daily questions**, rotating on a fixed local-calendar cycle.
 
-Every one of those, and every word of chrome, ships in **English and Thai**.
+That is **700 relationship questions**, and every one of them — plus every word
+of chrome — ships in **English and Thai**.
 
-### Depth
+### Depth, and what a session deals
 
-Level 1–10 maps onto four bands — Warm-up, Getting real, Uncomfortably honest,
-No going back. The level decides where in a deck the session opens, so a
-level-9 night skips the small talk entirely.
+Every question carries the level it belongs at. Level 1–10 still maps onto the
+four bands — Warm-up, Getting real, Uncomfortably honest, No going back — but
+the level is now a **ceiling** rather than a starting offset: a session deals
+from the five levels ending at the one you picked, so level 10 draws on levels
+6–10 and the night ramps up instead of sitting at one pitch. Below level 5 the
+window is clamped to levels 1–5.
+
+Five levels of ten questions is **fifty cards per session, at every level**.
+
+The deck is **shuffled on every deal**, and questions this device has not dealt
+before go to the front — so opening a second session at the same level leads
+with what you have not been asked rather than repeating the first one. The last
+120 questions dealt are remembered for that purpose (`seen` in stored state).
 
 ---
 
@@ -48,14 +60,18 @@ opens in Thai if the device locale is Thai.
 
 - `src/i18n/strings.ts` holds the chrome. `en` is the source of truth for the
   shape and `th` is typed against it, so a missing key is a compile error.
-- `src/data/content.en.ts` and `content.th.ts` hold the questions. They mirror
-  each other index for index — the nth question of a deck is the same question
-  in both files.
+- `src/data/pool/` holds the relationship questions. Both languages sit in one
+  tuple per question — `['English…', 'ไทย…']` — so a translation cannot be
+  orphaned by an edit to one side. `content.en.ts` and `content.th.ts` keep the
+  chrome-adjacent copy (names, blurbs, packs, bands, the daily pool) and those
+  two still mirror each other index for index.
 - Ids never change with the language. Relationships, packs, modes and bands are
   keyed by stable ids (`Lover`, `after`, `pass`, `honest`), so persisted state
   is untouched by a switch, and a question kept in one language reads in the
-  other. `src/data/questions.ts` is the index that makes that work; questions
-  you wrote yourself are their own key and are never translated.
+  other. `src/data/questions.ts` is the index that makes that work: a question's
+  key is a hash of its English wording, so adding, removing or reordering
+  questions leaves every other key alone. Questions you wrote yourself are their
+  own key and are never translated.
 - Thai gets its own faces. Instrument Serif and DM Sans carry no Thai glyphs,
   and on Android a custom typeface has no fallback chain, so Thai set in them
   would render as empty boxes — the Thai side uses Noto Serif Thai and Noto
@@ -230,7 +246,10 @@ App.tsx                     Root: fonts, splash, and the screen state machine
 src/
   data/
     decks.ts                Ids and taxonomy: relationships, hues, depth bands
-    content.en.ts           English questions, blurbs, pack and band copy
+    levels.ts               Question levels, and the window a session deals from
+    pool/                   700 levelled questions, English and Thai paired
+    session.ts              Pool → shuffled deck, unseen questions first
+    content.en.ts           English blurbs, pack, band and daily copy
     content.th.ts           The same, in Thai, index for index
     questions.ts            Language-independent identity for a question
   i18n/
@@ -252,8 +271,8 @@ src/
 ```
 
 State that survives a relaunch: kept questions, your written pack, the names at
-the table, session settings, the chosen language, the streak, and your last
-setup choices. Live
+the table, session settings, the chosen language, the streak, the last 120
+questions dealt, and your last setup choices. Live
 session state (current card, timer) is deliberately in-memory.
 
 ---
@@ -282,4 +301,8 @@ places the shipping app had to go further:
   bar for a single device.
 - **Accessibility.** Every control carries a role, label and state.
 - **Two languages.** The canvas is English only. The app ships the whole of it
-  in Thai as well, including the 113 questions, and switches live.
+  in Thai as well, all 750 questions included, and switches live.
+- **The deck is a pool, not a list.** The canvas walks a fixed array from a
+  per-level offset, which left the deepest levels with three cards and dealt
+  the same three every time. Questions now carry a level, a session draws fifty
+  from a five-level window, and the order is shuffled with unseen cards first.

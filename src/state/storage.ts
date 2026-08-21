@@ -31,8 +31,17 @@ export type Streak = {
   lastPlayed: string | null;
 };
 
+/** How many recently dealt questions to remember. Two full pools' worth. */
+export const SEEN_LIMIT = 120;
+
 export type PersistedState = {
   saved: SavedQuestion[];
+  /**
+   * Keys of questions already dealt on this device, newest first. A session
+   * puts the ones missing from this list at the front of the deck, so opening
+   * the app again leads with cards you have not been asked.
+   */
+  seen: string[];
   custom: string[];
   players: string[];
   prefs: Prefs;
@@ -45,6 +54,7 @@ export type PersistedState = {
 
 export const DEFAULT_STATE: PersistedState = {
   saved: [],
+  seen: [],
   custom: [],
   players: [],
   prefs: { timerSeconds: 90, showTimer: true, allowSkip: true, lang: deviceLang() },
@@ -74,12 +84,14 @@ function reconcile(raw: unknown): PersistedState {
   if (!raw || typeof raw !== 'object') return DEFAULT_STATE;
   const r = raw as Partial<PersistedState>;
   return {
+    // The key is always re-derived rather than trusted: a blob written by an
+    // older build may carry no key at all, or one from a scheme since replaced.
     saved: Array.isArray(r.saved)
       ? r.saved
           .filter((s) => s && typeof s.q === 'string')
-          // Blobs written before the app spoke two languages carry no key.
-          .map((s) => ({ ...s, key: typeof s.key === 'string' ? s.key : keyFor(s.q) }))
+          .map((s) => ({ ...s, key: keyFor(s.q) }))
       : [],
+    seen: Array.isArray(r.seen) ? r.seen.filter((k) => typeof k === 'string') : [],
     custom: Array.isArray(r.custom) ? r.custom.filter((c) => typeof c === 'string') : [],
     players: Array.isArray(r.players) ? r.players.filter((p) => typeof p === 'string') : [],
     prefs: {

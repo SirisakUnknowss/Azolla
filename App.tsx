@@ -11,19 +11,14 @@ import { NotoSerifThai_400Regular } from '@expo-google-fonts/noto-serif-thai/400
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { TabBar, type TabId } from './src/components/TabBar';
-import {
-  HUES,
-  startIndexFor,
-  type ModeId,
-  type PackId,
-  type Relationship,
-} from './src/data/decks';
+import { HUES, type ModeId, type PackId, type Relationship } from './src/data/decks';
+import { deckFor, shuffle } from './src/data/session';
 import { useI18n } from './src/i18n';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { PacksScreen } from './src/screens/PacksScreen';
@@ -44,7 +39,7 @@ const AFTER_DARK_DEPTH = 8;
 
 function Root() {
   const store = useStore();
-  const { t, content } = useI18n();
+  const { lang, t, content } = useI18n();
   const [screen, setScreen] = useState<Screen>('home');
   const [setupRel, setSetupRel] = useState<Relationship>('Lover');
   const [depth, setDepth] = useState(4);
@@ -59,10 +54,14 @@ function Root() {
     setMode(store.lastMode);
   }, [store.hydrated, store.lastRel, store.lastDepth, store.lastMode]);
 
+  // Every deal gets a new id, which keys the session screen and so resets the
+  // card index, the timer and the level with the new deck.
+  const dealtRef = useRef(0);
   const openSession = useCallback(
-    (config: SessionConfig) => {
+    (config: Omit<SessionConfig, 'id'>) => {
       store.markPlayed();
-      setSession(config);
+      dealtRef.current += 1;
+      setSession({ ...config, id: dealtRef.current });
       setScreen('session');
     },
     [store],
@@ -73,6 +72,11 @@ function Root() {
     setScreen('setup');
   }, []);
 
+  const dealFor = useCallback(
+    (rel: Relationship, level: number) => deckFor(rel, level, lang, store.seen),
+    [lang, store.seen],
+  );
+
   const startFromSetup = useCallback(() => {
     store.rememberSetup(setupRel, depth, mode);
     openSession({
@@ -81,16 +85,26 @@ function Root() {
       hue: HUES[setupRel][0],
       depth,
       mode,
-      deck: content.decks[setupRel],
-      startIndex: startIndexFor(depth),
+      deck: dealFor(setupRel, depth),
     });
-  }, [content, depth, mode, openSession, setupRel, store]);
+  }, [content, dealFor, depth, mode, openSession, setupRel, store]);
+
+  // "Turn it up a level" deals a fresh deck rather than skipping ahead in the
+  // current one, so the deeper questions are actually new.
+  const goDeeper = useCallback(
+    (level: number) => {
+      if (!session) return;
+      setDepth(level);
+      openSession({ ...session, depth: level, deck: dealFor(session.rel, level) });
+    },
+    [dealFor, openSession, session],
+  );
 
   const startDaily = useCallback(
     (question: string) => {
       // The daily question is dealt first, then the session rolls on into the
       // relationship deck the user played last.
-      const rest = content.decks[store.lastRel].slice(startIndexFor(DAILY_DEPTH));
+      const rest = dealFor(store.lastRel, DAILY_DEPTH).filter((q) => q !== question);
       openSession({
         rel: store.lastRel,
         sourceLabel: t.todayLabel,
@@ -98,10 +112,9 @@ function Root() {
         depth: DAILY_DEPTH,
         mode: store.lastMode,
         deck: [question, ...rest],
-        startIndex: 0,
       });
     },
-    [content, openSession, t, store.lastRel, store.lastMode],
+    [dealFor, openSession, t, store.lastRel, store.lastMode],
   );
 
   const playPack = useCallback(
@@ -116,8 +129,9 @@ function Root() {
         // Packs are curated end to end, so they always start at the first card.
         depth: id === 'after' ? Math.max(depth, AFTER_DARK_DEPTH) : depth,
         mode: store.lastMode,
-        deck: questions,
-        startIndex: 0,
+        // A pack is short and curated, so all of it is dealt — shuffled, so a
+        // second run through is not the same night.
+        deck: shuffle(questions),
       });
     },
     [content, depth, openSession, t, store.custom, store.lastMode, store.lastRel],
@@ -151,7 +165,12 @@ function Root() {
       )}
 
       {screen === 'session' && session && (
-        <SessionScreen config={session} onExit={leaveSession} onDepthChange={setDepth} />
+        <SessionScreen
+          key={session.id}
+          config={session}
+          onExit={leaveSession}
+          onGoDeeper={goDeeper}
+        />
       )}
 
       {screen === 'saved' && <SavedScreen />}

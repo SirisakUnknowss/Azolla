@@ -64,12 +64,4 @@ export function bandFor(depth: number): BandId {
   return (BAND_MAX.find((b) => depth <= b.max) ?? BAND_MAX[3]).id;
 }
 
-/**
- * Where in a deck a session opens. Deeper levels skip the warm-up cards,
- * matching `startIdx` in the canvas.
- */
-export function startIndexFor(depth: number): number {
-  return depth <= 3 ? 0 : depth <= 6 ? 3 : 6;
-}
-
 export type { Content } from './content';

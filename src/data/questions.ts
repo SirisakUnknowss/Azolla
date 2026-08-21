@@ -3,37 +3,57 @@
  *
  * Kept questions are stored under one of these keys, so a question starred in
  * English is still starred — and reads in Thai — after the language changes.
- * Questions the user wrote themselves are their own key: they are not
+ * The key is derived from the English wording rather than from a position in a
+ * file, so adding, removing or reordering questions leaves every other key
+ * alone. Questions the user wrote themselves are their own key: they are not
  * translated and there is nothing to look them up in.
  */
 
-import { LANGS, type Lang } from '../i18n/lang';
+import type { Lang } from '../i18n/lang';
 
 import { contentFor, PACK_IDS, RELATIONSHIPS } from './decks';
+import { LEVELS, type QuestionPair } from './levels';
+import { DECKS } from './pool';
 
 export type QuestionKey = string;
 
 const TEXT_TO_KEY = new Map<string, QuestionKey>();
 const KEY_TO_TEXT = new Map<QuestionKey, Partial<Record<Lang, string>>>();
 
-function index(key: QuestionKey, lang: Lang, text: string) {
-  // First writer wins: a string that appears in two decks keeps the identity of
-  // the deck that registered it, rather than flip-flopping between them.
-  if (!TEXT_TO_KEY.has(text)) TEXT_TO_KEY.set(text, key);
-  const byLang = KEY_TO_TEXT.get(key) ?? {};
-  byLang[lang] = text;
-  KEY_TO_TEXT.set(key, byLang);
+/** FNV-1a over the English wording — short, stable, and no ids to maintain. */
+function hash(text: string): QuestionKey {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return `q${h.toString(36)}`;
 }
 
-for (const lang of LANGS) {
-  const content = contentFor(lang);
-  for (const rel of RELATIONSHIPS) {
-    content.decks[rel].forEach((q, i) => index(`deck:${rel}:${i}`, lang, q));
-  }
+function index(en: string, th: string) {
+  const key = hash(en);
+  TEXT_TO_KEY.set(en, key);
+  TEXT_TO_KEY.set(th, key);
+  KEY_TO_TEXT.set(key, { en, th });
+}
+
+function indexPair(pair: QuestionPair) {
+  index(pair[0], pair[1]);
+}
+
+for (const rel of RELATIONSHIPS) {
+  for (const level of LEVELS) DECKS[rel][level].forEach(indexPair);
+}
+
+// Packs and the daily pool still live in the per-language content files, so
+// they are paired up by position on the way in.
+{
+  const en = contentFor('en');
+  const th = contentFor('th');
   for (const id of PACK_IDS) {
-    content.packs[id].questions.forEach((q, i) => index(`pack:${id}:${i}`, lang, q));
+    en.packs[id].questions.forEach((q, i) => index(q, th.packs[id].questions[i]));
   }
-  content.daily.forEach((q, i) => index(`daily:${i}`, lang, q));
+  en.daily.forEach((q, i) => index(q, th.daily[i]));
 }
 
 /** The key a question is filed under. Unknown text is its own key. */

@@ -1,11 +1,10 @@
 /**
- * English content.
+ * English chrome content — names, blurbs, packs, bands and the daily pool.
  *
- * The relationship decks, blurbs, hues and modes come straight from the design
- * canvas. The pack decks are new: the canvas defines the four packs and their
- * copy but ships no questions for them, so they are written here in the same
- * voice. The Thai file mirrors this one index for index — the two are paired by
- * position, so questions keep their identity across a language switch.
+ * The relationship questions do not live here: they carry a level and both
+ * languages at once, in `pool/`. What is left is copy that comes straight from
+ * the design canvas, plus the pack questions, which the canvas names but never
+ * writes. The Thai file mirrors this one index for index.
  */
 
 import type { Content } from './content';
@@ -29,86 +28,6 @@ export const EN: Content = {
     Family: 'The unspoken stuff',
     Colleague: 'Past the standup small talk',
     Stranger: 'Nothing to lose',
-  },
-
-  decks: {
-    'New friend': [
-      "What's a lie you tell strangers about yourself?",
-      'What did you assume about me in the first ten seconds?',
-      "What's the last thing you searched that you'd rather not admit?",
-      'What are you pretending to have figured out?',
-      "Who did you want to be at seventeen, and how's that going?",
-      'What compliment do you never get but wish you did?',
-      "What's the loneliest you've been in a crowded room?",
-      'What do you hope nobody ever finds out about you?',
-      'What would you change about the way people meet you?',
-    ],
-    'Old friend': [
-      'Which version of me do you miss?',
-      "What's the dumbest thing we got away with?",
-      "What do you tell other people about me when I'm not there?",
-      'When did you stop telling me everything?',
-      'What did I get wrong about you back then?',
-      "What have you outgrown that I haven't noticed?",
-      'Was there a moment you almost let this friendship go?',
-      'What do you forgive me for that I never apologised for?',
-      'If we met today, would we still pick each other?',
-    ],
-    'Best friend': [
-      "What's my most annoying habit? Be specific.",
-      'What would you do first if you woke up as me?',
-      'What secret of mine are you weirdly proud of keeping?',
-      'Where am I lying to myself?',
-      'What have you been protecting me from?',
-      'What do you envy about my life?',
-      "What would you say at my funeral that you'd never say to my face?",
-      'What about me have you decided to accept instead of mention?',
-      'When did I let you down and never find out?',
-    ],
-    Lover: [
-      'What did you notice about me before we spoke?',
-      'What small thing I do would you miss immediately?',
-      'Which of my texts did you reread?',
-      "What do you need from me that you've never asked for?",
-      'When do you feel furthest from me in the same room?',
-      'What are you scared to want out loud?',
-      'What would break us, if we let it?',
-      'What part of you have you never brought into this?',
-      'What do you need me to stop forgiving you for?',
-    ],
-    Family: [
-      'Which family story do you think got exaggerated?',
-      'What did you think my life would look like?',
-      "What's the family trait you can't escape?",
-      'What did we never talk about, and why?',
-      'When did you first see me as an adult?',
-      "What do you wish you'd asked while you had the chance?",
-      'What have you never forgiven, and does it still cost you?',
-      "What did you inherit that you're trying not to pass on?",
-      'What would you say to me if there were no consequences?',
-    ],
-    Colleague: [
-      'What do you actually do all day?',
-      'Which recurring meeting would you cancel forever?',
-      'What did you think I did here when we met?',
-      "What do you want that you haven't told anyone at work?",
-      'When did you last feel out of your depth?',
-      'What would you do if the money were handled?',
-      'What are you afraid this job is turning you into?',
-      'Who here do you not trust, and how do you live with it?',
-      'What ambition have you quietly given up on?',
-    ],
-    Stranger: [
-      "What's on your mind that you haven't said out loud today?",
-      "What's the best thing that happened to you this week?",
-      'What would you do with a completely free Tuesday?',
-      'What are you tired of explaining?',
-      'What do you wish people asked you about?',
-      'What did you change your mind about recently?',
-      'What are you carrying right now?',
-      "What do you need that you can't ask for?",
-      'When did you last surprise yourself?',
-    ],
   },
 
   modes: {

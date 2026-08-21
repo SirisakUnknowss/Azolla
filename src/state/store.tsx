@@ -14,6 +14,7 @@ import {
   DEFAULT_STATE,
   loadState,
   saveState,
+  SEEN_LIMIT,
   today,
   yesterday,
   type PersistedState,
@@ -30,6 +31,8 @@ type Store = PersistedState & {
   isSaved: (q: string) => boolean;
   /** Takes the stored key, not the wording — see `data/questions.ts`. */
   removeSaved: (key: string) => void;
+  /** Records a question as dealt, so later sessions lead with fresh ones. */
+  markSeen: (q: string) => void;
   addCustom: (q: string) => void;
   removeCustom: (q: string) => void;
   addPlayer: (name: string) => void;
@@ -90,6 +93,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setState((s) => ({ ...s, saved: s.saved.filter((x) => x.key !== key) }));
   }, []);
 
+  const markSeen = useCallback((q: string) => {
+    const key = keyFor(q);
+    setState((s) =>
+      s.seen[0] === key
+        ? s
+        : { ...s, seen: [key, ...s.seen.filter((k) => k !== key)].slice(0, SEEN_LIMIT) },
+    );
+  }, []);
+
   const addCustom = useCallback((q: string) => {
     const trimmed = q.trim();
     if (!trimmed) return;
@@ -139,6 +151,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toggleSaved,
       isSaved,
       removeSaved,
+      markSeen,
       addCustom,
       removeCustom,
       addPlayer,
@@ -153,6 +166,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toggleSaved,
       isSaved,
       removeSaved,
+      markSeen,
       addCustom,
       removeCustom,
       addPlayer,
