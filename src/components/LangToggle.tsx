@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { LANG_LABEL, LANGS, useI18n } from '../i18n';
-import { color, ink, radius, surface, type Typo } from '../theme/tokens';
+import { radius, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
 import { tapLight } from '../util/haptics';
 
@@ -37,19 +37,19 @@ export function LangToggle() {
   );
 }
 
-const makeStyles = (t: Typo) =>
+const makeStyles = (t: Typo, p: Palette) =>
   StyleSheet.create({
     shell: {
       flexDirection: 'row',
       gap: 2,
       padding: 3,
       borderRadius: radius.pill,
-      backgroundColor: surface.s06,
+      backgroundColor: p.surface.s06,
       borderWidth: 1,
-      borderColor: surface.border,
+      borderColor: p.surface.border,
     },
     seg: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: radius.pill },
-    segOn: { backgroundColor: surface.s11 },
-    label: { fontFamily: t.font.sansBold, fontSize: 10.5, letterSpacing: 0.9, color: ink.a45 },
-    labelOn: { color: color.ink },
+    segOn: { backgroundColor: p.surface.s11 },
+    label: { fontFamily: t.font.sansBold, fontSize: 10.5, letterSpacing: 0.9, color: p.ink.a45 },
+    labelOn: { color: p.color.ink },
   });

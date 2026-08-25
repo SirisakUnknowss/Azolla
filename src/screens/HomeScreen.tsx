@@ -7,15 +7,8 @@ import { LangToggle } from '../components/LangToggle';
 import { HUES, RELATIONSHIPS, type Relationship } from '../data/decks';
 import { useI18n } from '../i18n';
 import { useStore } from '../state/store';
-import {
-  accentAlpha,
-  color,
-  ink,
-  radius,
-  screenPad,
-  surface,
-  type Typo,
-} from '../theme/tokens';
+import { useTheme } from '../theme';
+import { radius, screenPad, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
 import { dailyQuestion } from '../util/daily';
 import { tapLight } from '../util/haptics';
@@ -29,6 +22,7 @@ export function HomeScreen({ onPickRelationship, onStartDaily }: Props) {
   const insets = useSafeAreaInsets();
   const { streak } = useStore();
   const { t, content } = useI18n();
+  const { palette: p } = useTheme();
   const styles = useStyles(makeStyles);
   const daily = useMemo(() => dailyQuestion(content.daily), [content]);
 
@@ -44,7 +38,7 @@ export function HomeScreen({ onPickRelationship, onStartDaily }: Props) {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <Text style={styles.wordmark}>DEEPTALK</Text>
+        <Text style={styles.wordmark}>AZOLLA</Text>
         <View style={styles.headerRight}>
           <LangToggle />
           <View style={styles.streakPill}>
@@ -86,7 +80,7 @@ export function HomeScreen({ onPickRelationship, onStartDaily }: Props) {
       </View>
 
       <LinearGradient
-        colors={[accentAlpha.a16, accentAlpha.a04]}
+        colors={[p.accentAlpha.a16, p.accentAlpha.a04]}
         start={{ x: 0.2, y: 0 }}
         end={{ x: 0.8, y: 1 }}
         style={styles.daily}
@@ -109,9 +103,9 @@ export function HomeScreen({ onPickRelationship, onStartDaily }: Props) {
   );
 }
 
-const makeStyles = (t: Typo) =>
+const makeStyles = (t: Typo, p: Palette) =>
   StyleSheet.create({
-    root: { flex: 1, backgroundColor: color.bg },
+    root: { flex: 1, backgroundColor: p.color.bg },
     content: { paddingHorizontal: screenPad },
     header: {
       flexDirection: 'row',
@@ -119,7 +113,7 @@ const makeStyles = (t: Typo) =>
       justifyContent: 'space-between',
       marginBottom: 26,
     },
-    wordmark: { fontFamily: t.font.sansBold, fontSize: 12, letterSpacing: 2.64, color: color.accent },
+    wordmark: { fontFamily: t.font.sansBold, fontSize: 12, letterSpacing: 2.64, color: p.color.accent },
     headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     streakPill: {
       flexDirection: 'row',
@@ -128,20 +122,20 @@ const makeStyles = (t: Typo) =>
       paddingVertical: 6,
       paddingHorizontal: 11,
       borderRadius: radius.pill,
-      backgroundColor: accentAlpha.a12,
+      backgroundColor: p.accentAlpha.a12,
       borderWidth: 1,
-      borderColor: accentAlpha.a28,
+      borderColor: p.accentAlpha.a28,
     },
-    streakDot: { width: 6, height: 6, borderRadius: 99, backgroundColor: color.accent },
-    streakText: { fontFamily: t.font.sansMedium, fontSize: 12, color: color.accentSoft },
+    streakDot: { width: 6, height: 6, borderRadius: 99, backgroundColor: p.color.accent },
+    streakText: { fontFamily: t.font.sansMedium, fontSize: 12, color: p.color.accentSoft },
     title: {
       fontFamily: t.font.serif,
       fontSize: 40,
       lineHeight: t.line(40, 41),
-      color: color.ink,
+      color: p.color.ink,
       marginBottom: 8,
     },
-    subtitle: { fontFamily: t.font.sans, fontSize: 14, lineHeight: t.line(14, 21), color: ink.a50, marginBottom: 26 },
+    subtitle: { fontFamily: t.font.sans, fontSize: 14, lineHeight: t.line(14, 21), color: p.ink.a50, marginBottom: 26 },
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 11 },
     relCard: {
       flexGrow: 1,
@@ -150,28 +144,28 @@ const makeStyles = (t: Typo) =>
       borderRadius: radius.xl,
       padding: 14,
       justifyContent: 'space-between',
-      backgroundColor: surface.s045,
+      backgroundColor: p.surface.s045,
       borderWidth: 1,
-      borderColor: surface.border,
+      borderColor: p.surface.border,
     },
-    relCardPressed: { backgroundColor: surface.s09 },
+    relCardPressed: { backgroundColor: p.surface.s09 },
     relIcon: { width: 26, height: 26, borderRadius: 99, alignItems: 'center', justifyContent: 'center' },
     relIconDot: { width: 9, height: 9, borderRadius: 99 },
-    relName: { fontFamily: t.font.sansMedium, fontSize: 16, color: color.ink, marginBottom: 3 },
-    relBlurb: { fontFamily: t.font.sans, fontSize: 11.5, lineHeight: t.line(11.5, 15.5), color: ink.a45 },
+    relName: { fontFamily: t.font.sansMedium, fontSize: 16, color: p.color.ink, marginBottom: 3 },
+    relBlurb: { fontFamily: t.font.sans, fontSize: 11.5, lineHeight: t.line(11.5, 15.5), color: p.ink.a45 },
     daily: {
       marginTop: 22,
       borderRadius: radius.xxl,
       padding: 18,
       borderWidth: 1,
-      borderColor: accentAlpha.a22,
+      borderColor: p.accentAlpha.a22,
     },
-    dailyEyebrow: { ...t.eyebrow, color: color.accentSoft, marginBottom: 10 },
+    dailyEyebrow: { ...t.eyebrow, color: p.color.accentSoft, marginBottom: 10 },
     dailyQuestion: {
       fontFamily: t.font.serif,
       fontSize: 24,
       lineHeight: t.line(24, 29),
-      color: color.ink,
+      color: p.color.ink,
       marginBottom: 14,
     },
     dailyCta: {
@@ -179,8 +173,8 @@ const makeStyles = (t: Typo) =>
       paddingVertical: 10,
       paddingHorizontal: 16,
       borderRadius: radius.pill,
-      backgroundColor: color.accent,
+      backgroundColor: p.color.accent,
     },
-    dailyCtaPressed: { backgroundColor: color.accentHover },
-    dailyCtaText: { fontFamily: t.font.sansMedium, fontSize: 13.5, color: color.onAccent },
+    dailyCtaPressed: { backgroundColor: p.color.accentHover },
+    dailyCtaText: { fontFamily: t.font.sansMedium, fontSize: 13.5, color: p.color.onAccent },
   });

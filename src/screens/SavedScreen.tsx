@@ -6,15 +6,7 @@ import { HUES } from '../data/decks';
 import { textFor } from '../data/questions';
 import { useI18n } from '../i18n';
 import { useStore } from '../state/store';
-import {
-  accentAlpha,
-  color,
-  ink,
-  radius,
-  screenPad,
-  surface,
-  type Typo,
-} from '../theme/tokens';
+import { radius, screenPad, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
 import { tapLight } from '../util/haptics';
 
@@ -78,33 +70,33 @@ export function SavedScreen() {
   );
 }
 
-const makeStyles = (t: Typo) =>
+const makeStyles = (t: Typo, p: Palette) =>
   StyleSheet.create({
-    root: { flex: 1, backgroundColor: color.bg },
+    root: { flex: 1, backgroundColor: p.color.bg },
     content: { paddingHorizontal: screenPad },
-    title: { fontFamily: t.font.serif, fontSize: 36, lineHeight: t.line(36, 38), color: color.ink, marginBottom: 6 },
-    subtitle: { fontFamily: t.font.sans, fontSize: 13.5, lineHeight: t.line(13.5, 20), color: ink.a45, marginBottom: 24 },
+    title: { fontFamily: t.font.serif, fontSize: 36, lineHeight: t.line(36, 38), color: p.color.ink, marginBottom: 6 },
+    subtitle: { fontFamily: t.font.sans, fontSize: 13.5, lineHeight: t.line(13.5, 20), color: p.ink.a45, marginBottom: 24 },
     empty: {
       paddingVertical: 34,
       paddingHorizontal: 20,
       borderRadius: radius.xl,
       borderWidth: 1,
       borderStyle: 'dashed',
-      borderColor: surface.dashed,
+      borderColor: p.surface.dashed,
     },
-    emptyText: { fontFamily: t.font.sans, fontSize: 14, lineHeight: t.line(14, 21), color: ink.a42, textAlign: 'center' },
+    emptyText: { fontFamily: t.font.sans, fontSize: 14, lineHeight: t.line(14, 21), color: p.ink.a42, textAlign: 'center' },
     list: { gap: 10 },
     card: {
       paddingVertical: 16,
       paddingHorizontal: 17,
       borderRadius: radius.lg,
-      backgroundColor: surface.s045,
+      backgroundColor: p.surface.s045,
       borderWidth: 1,
-      borderColor: surface.border,
+      borderColor: p.surface.border,
     },
     metaRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 8 },
     dot: { width: 7, height: 7, borderRadius: 99 },
-    meta: { fontFamily: t.font.sansBold, fontSize: 9.5, letterSpacing: 1.52, color: ink.a42 },
-    question: { fontFamily: t.font.serif, fontSize: 21, lineHeight: t.line(21, 26), color: color.ink },
-    remove: { fontFamily: t.font.sansMedium, fontSize: 12, color: accentAlpha.a85, marginTop: 10 },
+    meta: { fontFamily: t.font.sansBold, fontSize: 9.5, letterSpacing: 1.52, color: p.ink.a42 },
+    question: { fontFamily: t.font.serif, fontSize: 21, lineHeight: t.line(21, 26), color: p.color.ink },
+    remove: { fontFamily: t.font.sansMedium, fontSize: 12, color: p.accentAlpha.a85, marginTop: 10 },
   });

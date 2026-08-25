@@ -97,6 +97,11 @@ const en = {
   allowPassingBlurb: 'Keep a Pass button on every card',
   language: 'Language',
   languageBlurb: 'The app and the questions',
+  theme: 'Theme',
+  themeBlurb: 'Light or dark',
+  themeLight: 'Light',
+  themeDark: 'Dark',
+  themeA11y: (name: string) => `Switch the app to ${name} theme`,
   dealFrom: (name: string) => `Deal from ${name}`,
 };
 
@@ -190,6 +195,11 @@ const th: Dict = {
   allowPassingBlurb: 'มีปุ่มข้ามบนการ์ดทุกใบ',
   language: 'ภาษา',
   languageBlurb: 'ทั้งตัวแอปและคำถาม',
+  theme: 'ธีม',
+  themeBlurb: 'สว่างหรือมืด',
+  themeLight: 'สว่าง',
+  themeDark: 'มืด',
+  themeA11y: (name: string) => `เปลี่ยนธีมแอปเป็น${name}`,
   dealFrom: (name: string) => `แจกจาก${name}`,
 };
 

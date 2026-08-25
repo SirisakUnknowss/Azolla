@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ModeId, Relationship } from '../data/decks';
 import { keyFor } from '../data/questions';
 import { deviceLang, LANGS, type Lang } from '../i18n/lang';
+import { THEME_MODES, type ThemeMode } from '../theme/tokens';
 
 const KEY = 'deeptalk:v1';
 
@@ -23,6 +24,7 @@ export type Prefs = {
   showTimer: boolean;
   allowSkip: boolean;
   lang: Lang;
+  themeMode: ThemeMode;
 };
 
 export type Streak = {
@@ -57,7 +59,7 @@ export const DEFAULT_STATE: PersistedState = {
   seen: [],
   custom: [],
   players: [],
-  prefs: { timerSeconds: 90, showTimer: true, allowSkip: true, lang: deviceLang() },
+  prefs: { timerSeconds: 90, showTimer: true, allowSkip: true, lang: deviceLang(), themeMode: 'dark' },
   streak: { count: 0, lastPlayed: null },
   lastRel: 'Lover',
   lastDepth: 4,
@@ -99,6 +101,9 @@ function reconcile(raw: unknown): PersistedState {
       ...(r.prefs ?? {}),
       // An unknown language code should not leave the app with no strings.
       lang: LANGS.includes(r.prefs?.lang as Lang) ? (r.prefs?.lang as Lang) : DEFAULT_STATE.prefs.lang,
+      themeMode: THEME_MODES.includes(r.prefs?.themeMode as ThemeMode)
+        ? (r.prefs?.themeMode as ThemeMode)
+        : DEFAULT_STATE.prefs.themeMode,
     },
     streak: { ...DEFAULT_STATE.streak, ...(r.streak ?? {}) },
     lastRel: r.lastRel ?? DEFAULT_STATE.lastRel,

@@ -14,15 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { bandFor, HUES, MODE_IDS, type ModeId, type Relationship } from '../data/decks';
 import { useI18n } from '../i18n';
 import { useStore } from '../state/store';
-import {
-  accentAlpha,
-  color,
-  ink,
-  radius,
-  screenPad,
-  surface,
-  type Typo,
-} from '../theme/tokens';
+import { useTheme } from '../theme';
+import { radius, screenPad, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
 import { tapLight } from '../util/haptics';
 
@@ -50,6 +43,7 @@ export function SetupScreen({
   const insets = useSafeAreaInsets();
   const { players, addPlayer, removePlayer } = useStore();
   const { t, content, typo } = useI18n();
+  const { palette: p } = useTheme();
   const styles = useStyles(makeStyles);
   const [nameDraft, setNameDraft] = useState('');
 
@@ -104,7 +98,7 @@ export function SetupScreen({
               <View
                 style={[
                   styles.bar,
-                  { height: 16 + i * 4, backgroundColor: i < depth ? hue : surface.s11 },
+                  { height: 16 + i * 4, backgroundColor: i < depth ? hue : p.surface.s11 },
                 ]}
               />
             </Pressable>
@@ -134,12 +128,12 @@ export function SetupScreen({
                 style={[
                   styles.mode,
                   {
-                    backgroundColor: on ? surface.s09 : surface.s03,
-                    borderColor: on ? accentAlpha.a50 : surface.border,
+                    backgroundColor: on ? p.surface.s09 : p.surface.s03,
+                    borderColor: on ? p.accentAlpha.a50 : p.surface.border,
                   },
                 ]}
               >
-                <View style={[styles.radio, { borderColor: on ? color.accent : surface.ring }]}>
+                <View style={[styles.radio, { borderColor: on ? p.color.accent : p.surface.ring }]}>
                   {on && <View style={styles.radioDot} />}
                 </View>
                 <View style={styles.modeText}>
@@ -187,7 +181,7 @@ export function SetupScreen({
                   onChangeText={setNameDraft}
                   onSubmitEditing={submitName}
                   placeholder={t.addNamePlaceholder}
-                  placeholderTextColor={ink.a35}
+                  placeholderTextColor={p.ink.a35}
                   returnKeyType="done"
                   autoCapitalize="words"
                   style={styles.input}
@@ -207,7 +201,7 @@ export function SetupScreen({
       </ScrollView>
 
       <LinearGradient
-        colors={['rgba(20,16,27,0)', color.bg, color.bg]}
+        colors={[p.color.bgFade, p.color.bg, p.color.bg]}
         locations={[0, 0.45, 1]}
         style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 14 }]}
         pointerEvents="box-none"
@@ -229,9 +223,9 @@ export function SetupScreen({
   );
 }
 
-const makeStyles = (t: Typo) =>
+const makeStyles = (t: Typo, p: Palette) =>
   StyleSheet.create({
-    root: { flex: 1, backgroundColor: color.bg },
+    root: { flex: 1, backgroundColor: p.color.bg },
     content: { paddingHorizontal: screenPad },
     back: {
       width: 38,
@@ -239,13 +233,13 @@ const makeStyles = (t: Typo) =>
       borderRadius: 99,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: surface.s07,
+      backgroundColor: p.surface.s07,
       marginBottom: 22,
     },
-    backPressed: { backgroundColor: surface.s11 },
-    backGlyph: { fontFamily: t.font.sans, fontSize: 18, color: ink.a70 },
+    backPressed: { backgroundColor: p.surface.s11 },
+    backGlyph: { fontFamily: t.font.sans, fontSize: 18, color: p.ink.a70 },
     relEyebrow: { ...t.eyebrow, marginBottom: 9 },
-    title: { fontFamily: t.font.serif, fontSize: 34, lineHeight: t.line(34, 36), color: color.ink, marginBottom: 28 },
+    title: { fontFamily: t.font.serif, fontSize: 34, lineHeight: t.line(34, 36), color: p.color.ink, marginBottom: 28 },
     bars: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, marginBottom: 14 },
     barHit: { flex: 1, justifyContent: 'flex-end', paddingVertical: 6 },
     bar: { borderRadius: 6 },
@@ -255,9 +249,9 @@ const makeStyles = (t: Typo) =>
       justifyContent: 'space-between',
       marginBottom: 34,
     },
-    depthLabel: { fontFamily: t.font.serif, fontSize: 26, color: color.ink },
-    depthCount: { fontFamily: t.font.sansMedium, fontSize: 13, color: ink.a45 },
-    sectionEyebrow: { ...t.eyebrow, color: ink.a40, marginBottom: 12 },
+    depthLabel: { fontFamily: t.font.serif, fontSize: 26, color: p.color.ink },
+    depthCount: { fontFamily: t.font.sansMedium, fontSize: 13, color: p.ink.a45 },
+    sectionEyebrow: { ...t.eyebrow, color: p.ink.a40, marginBottom: 12 },
     modes: { gap: 9, marginBottom: 30 },
     mode: {
       flexDirection: 'row',
@@ -276,10 +270,10 @@ const makeStyles = (t: Typo) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
-    radioDot: { width: 9, height: 9, borderRadius: 99, backgroundColor: color.accent },
+    radioDot: { width: 9, height: 9, borderRadius: 99, backgroundColor: p.color.accent },
     modeText: { flex: 1 },
-    modeName: { fontFamily: t.font.sansMedium, fontSize: 15, color: color.ink },
-    modeBlurb: { fontFamily: t.font.sans, fontSize: 11.5, lineHeight: t.line(11.5, 15.5), color: ink.a45, marginTop: 2 },
+    modeName: { fontFamily: t.font.sansMedium, fontSize: 15, color: p.color.ink },
+    modeBlurb: { fontFamily: t.font.sans, fontSize: 11.5, lineHeight: t.line(11.5, 15.5), color: p.ink.a45, marginTop: 2 },
     chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
     chip: {
       flexDirection: 'row',
@@ -288,14 +282,14 @@ const makeStyles = (t: Typo) =>
       paddingVertical: 9,
       paddingHorizontal: 13,
       borderRadius: radius.pill,
-      backgroundColor: surface.s06,
+      backgroundColor: p.surface.s06,
       borderWidth: 1,
-      borderColor: surface.s10,
+      borderColor: p.surface.s10,
     },
     chipDot: { width: 8, height: 8, borderRadius: 99 },
-    chipName: { fontFamily: t.font.sansMedium, fontSize: 13, color: color.ink },
-    chipX: { fontFamily: t.font.sans, fontSize: 13, color: ink.a35 },
-    emptyPlayers: { fontFamily: t.font.sans, fontSize: 13, lineHeight: t.line(13, 19), color: ink.a42, marginBottom: 12 },
+    chipName: { fontFamily: t.font.sansMedium, fontSize: 13, color: p.color.ink },
+    chipX: { fontFamily: t.font.sans, fontSize: 13, color: p.ink.a35 },
+    emptyPlayers: { fontFamily: t.font.sans, fontSize: 13, lineHeight: t.line(13, 19), color: p.ink.a42, marginBottom: 12 },
     inputRow: { flexDirection: 'row', gap: 8 },
     input: {
       flex: 1,
@@ -303,9 +297,9 @@ const makeStyles = (t: Typo) =>
       paddingHorizontal: 14,
       borderRadius: radius.sm,
       borderWidth: 1,
-      borderColor: surface.borderStrong,
-      backgroundColor: surface.s04,
-      color: color.ink,
+      borderColor: p.surface.borderStrong,
+      backgroundColor: p.surface.s04,
+      color: p.color.ink,
       fontFamily: t.font.sans,
       fontSize: 14,
     },
@@ -313,10 +307,10 @@ const makeStyles = (t: Typo) =>
       paddingHorizontal: 17,
       justifyContent: 'center',
       borderRadius: radius.sm,
-      backgroundColor: surface.s10,
+      backgroundColor: p.surface.s10,
     },
-    addBtnPressed: { backgroundColor: surface.s07 },
-    addBtnText: { fontFamily: t.font.sansMedium, fontSize: 14, color: color.ink },
+    addBtnPressed: { backgroundColor: p.surface.s07 },
+    addBtnText: { fontFamily: t.font.sansMedium, fontSize: 14, color: p.color.ink },
     footer: {
       position: 'absolute',
       left: 0,
@@ -328,9 +322,9 @@ const makeStyles = (t: Typo) =>
     cta: {
       paddingVertical: 17,
       borderRadius: radius.lg,
-      backgroundColor: color.accent,
+      backgroundColor: p.color.accent,
       alignItems: 'center',
     },
-    ctaPressed: { backgroundColor: color.accentHover },
-    ctaText: { fontFamily: t.font.sansMedium, fontSize: 16, color: color.onAccent },
+    ctaPressed: { backgroundColor: p.color.accentHover },
+    ctaText: { fontFamily: t.font.sansMedium, fontSize: 16, color: p.color.onAccent },
   });

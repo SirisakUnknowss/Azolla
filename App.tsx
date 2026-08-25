@@ -26,7 +26,8 @@ import { SavedScreen } from './src/screens/SavedScreen';
 import { SessionScreen, type SessionConfig } from './src/screens/SessionScreen';
 import { SetupScreen } from './src/screens/SetupScreen';
 import { StoreProvider, useStore } from './src/state/store';
-import { color } from './src/theme/tokens';
+import { useTheme } from './src/theme';
+import { palette } from './src/theme/tokens';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -40,6 +41,7 @@ const AFTER_DARK_DEPTH = 8;
 function Root() {
   const store = useStore();
   const { lang, t, content } = useI18n();
+  const { mode: themeMode, palette: p } = useTheme();
   const [screen, setScreen] = useState<Screen>('home');
   const [setupRel, setSetupRel] = useState<Relationship>('Lover');
   const [depth, setDepth] = useState(4);
@@ -125,7 +127,7 @@ function Root() {
       openSession({
         rel: store.lastRel,
         sourceLabel: pack ? pack.name : t.yourPack,
-        hue: color.accent,
+        hue: p.color.accent,
         // Packs are curated end to end, so they always start at the first card.
         depth: id === 'after' ? Math.max(depth, AFTER_DARK_DEPTH) : depth,
         mode: store.lastMode,
@@ -134,7 +136,7 @@ function Root() {
         deck: shuffle(questions),
       });
     },
-    [content, depth, openSession, t, store.custom, store.lastMode, store.lastRel],
+    [content, depth, openSession, p, t, store.custom, store.lastMode, store.lastRel],
   );
 
   const leaveSession = useCallback(() => {
@@ -145,8 +147,8 @@ function Root() {
   const showTabs = screen === 'home' || screen === 'saved' || screen === 'packs';
 
   return (
-    <View style={styles.root}>
-      <StatusBar style="light" />
+    <View style={[styles.root, { backgroundColor: p.color.bg }]}>
+      <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
 
       {screen === 'home' && (
         <HomeScreen onPickRelationship={pickRelationship} onStartDaily={startDaily} />
@@ -217,6 +219,8 @@ export default function App() {
   );
 }
 
+// Painted before the persisted theme choice has loaded, so it uses the
+// default mode's background rather than reading from React state.
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: color.bg },
+  root: { flex: 1, backgroundColor: palette('dark').color.bg },
 });

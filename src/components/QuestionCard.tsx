@@ -9,7 +9,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useI18n } from '../i18n';
-import { color, radius, type Typo } from '../theme/tokens';
+import { useTheme } from '../theme';
+import { radius, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
 import { tapLight } from '../util/haptics';
 
@@ -44,6 +45,7 @@ export const QuestionCard = forwardRef<QuestionCardHandle, Props>(function Quest
   ref,
 ) {
   const { t } = useI18n();
+  const { palette: p } = useTheme();
   const styles = useStyles(makeStyles);
   const x = useSharedValue(0);
   const y = useSharedValue(0);
@@ -139,10 +141,10 @@ export const QuestionCard = forwardRef<QuestionCardHandle, Props>(function Quest
               }}
               style={[
                 styles.star,
-                { backgroundColor: saved ? relHue : 'rgba(26,20,32,.08)' },
+                { backgroundColor: saved ? relHue : 'rgba(18,39,26,.08)' },
               ]}
             >
-              <Text style={[styles.starGlyph, { color: saved ? color.cardInk : 'rgba(26,20,32,.45)' }]}>
+              <Text style={[styles.starGlyph, { color: saved ? p.color.cardInk : 'rgba(18,39,26,.45)' }]}>
                 ★
               </Text>
             </Pressable>
@@ -158,7 +160,7 @@ const underShared = {
   borderRadius: radius.card,
 };
 
-const makeStyles = (t: Typo) =>
+const makeStyles = (t: Typo, p: Palette) =>
   StyleSheet.create({
     stack: { flex: 1 },
     under2: {
@@ -167,7 +169,7 @@ const makeStyles = (t: Typo) =>
       right: 14,
       top: 16,
       bottom: -6,
-      backgroundColor: 'rgba(255,255,255,.05)',
+      backgroundColor: p.surface.s05,
     },
     under1: {
       ...underShared,
@@ -175,12 +177,12 @@ const makeStyles = (t: Typo) =>
       right: 7,
       top: 8,
       bottom: -3,
-      backgroundColor: 'rgba(255,255,255,.08)',
+      backgroundColor: p.surface.s08,
     },
     card: {
       flex: 1,
       borderRadius: radius.card,
-      backgroundColor: color.card,
+      backgroundColor: p.color.card,
       paddingVertical: 26,
       paddingHorizontal: 24,
       justifyContent: 'space-between',
@@ -197,23 +199,23 @@ const makeStyles = (t: Typo) =>
       fontFamily: t.font.sansBold,
       fontSize: 10,
       letterSpacing: 1.6,
-      color: 'rgba(26,20,32,.55)',
+      color: 'rgba(18,39,26,.55)',
     },
     bandLabel: {
       fontFamily: t.font.sansBold,
       fontSize: 10,
       letterSpacing: 1.6,
-      color: 'rgba(26,20,32,.35)',
+      color: 'rgba(18,39,26,.35)',
     },
     question: {
       fontFamily: t.font.serif,
       fontSize: 34,
       lineHeight: t.line(34, 38),
-      color: color.cardInk,
+      color: p.color.cardInk,
       paddingVertical: 14,
     },
     cardBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    hint: { fontFamily: t.font.sans, fontSize: 11.5, color: 'rgba(26,20,32,.4)', flexShrink: 1 },
+    hint: { fontFamily: t.font.sans, fontSize: 11.5, color: 'rgba(18,39,26,.4)', flexShrink: 1 },
     star: { width: 36, height: 36, borderRadius: 99, alignItems: 'center', justifyContent: 'center' },
     starGlyph: { fontSize: 16, lineHeight: 20 },
   });

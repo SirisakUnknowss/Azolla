@@ -6,7 +6,8 @@ import { QuestionCard, type QuestionCardHandle } from '../components/QuestionCar
 import { bandFor, type ModeId, type Relationship } from '../data/decks';
 import { useI18n } from '../i18n';
 import { useStore } from '../state/store';
-import { color, ink, radius, surface, type Typo } from '../theme/tokens';
+import { useTheme } from '../theme';
+import { radius, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
 import { notifyWarning, tapLight, tapMedium } from '../util/haptics';
 
@@ -36,6 +37,7 @@ export function SessionScreen({ config, onExit, onGoDeeper }: Props) {
   const insets = useSafeAreaInsets();
   const { players, saved, prefs, toggleSaved, markSeen } = useStore();
   const { t, content, typo } = useI18n();
+  const { palette: p } = useTheme();
   const styles = useStyles(makeStyles);
   const cardRef = useRef<QuestionCardHandle>(null);
 
@@ -151,10 +153,10 @@ export function SessionScreen({ config, onExit, onGoDeeper }: Props) {
             }}
             style={[
               styles.circleBtn,
-              { backgroundColor: lowTime ? 'rgba(255,107,138,.22)' : surface.s07 },
+              { backgroundColor: lowTime ? 'rgba(255,107,138,.22)' : p.surface.s07 },
             ]}
           >
-            <Text style={[styles.timerText, { color: lowTime ? color.danger : ink.a70 }]}>
+            <Text style={[styles.timerText, { color: lowTime ? p.color.danger : p.ink.a70 }]}>
               {timerLabel}
             </Text>
           </Pressable>
@@ -234,9 +236,9 @@ export function SessionScreen({ config, onExit, onGoDeeper }: Props) {
   );
 }
 
-const makeStyles = (t: Typo) =>
+const makeStyles = (t: Typo, p: Palette) =>
   StyleSheet.create({
-    root: { flex: 1, backgroundColor: color.bg, paddingHorizontal: 20 },
+    root: { flex: 1, backgroundColor: p.color.bg, paddingHorizontal: 20 },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -249,14 +251,14 @@ const makeStyles = (t: Typo) =>
       borderRadius: 99,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: surface.s07,
+      backgroundColor: p.surface.s07,
     },
-    circleBtnPressed: { backgroundColor: surface.s11 },
+    circleBtnPressed: { backgroundColor: p.surface.s11 },
     circleSpacer: { width: 38, height: 38 },
-    backGlyph: { fontFamily: t.font.sans, fontSize: 18, color: ink.a70 },
+    backGlyph: { fontFamily: t.font.sans, fontSize: 18, color: p.ink.a70 },
     headerCenter: { flex: 1, alignItems: 'center', paddingHorizontal: 8 },
-    turnLine: { fontFamily: t.font.sansMedium, fontSize: 14, color: color.ink },
-    progressLine: { fontFamily: t.font.sans, fontSize: 11, color: ink.a42, marginTop: 2 },
+    turnLine: { fontFamily: t.font.sansMedium, fontSize: 14, color: p.color.ink },
+    progressLine: { fontFamily: t.font.sans, fontSize: 11, color: p.ink.a42, marginTop: 2 },
     timerText: { fontFamily: t.font.sansMedium, fontSize: 11 },
     playArea: { flex: 1 },
     actions: { flexDirection: 'row', gap: 10, marginTop: 18 },
@@ -264,20 +266,20 @@ const makeStyles = (t: Typo) =>
       paddingVertical: 16,
       paddingHorizontal: 20,
       borderRadius: radius.lg,
-      backgroundColor: surface.s07,
+      backgroundColor: p.surface.s07,
       justifyContent: 'center',
     },
-    passPressed: { backgroundColor: surface.s11 },
-    passText: { fontFamily: t.font.sansMedium, fontSize: 15, color: ink.a75 },
+    passPressed: { backgroundColor: p.surface.s11 },
+    passText: { fontFamily: t.font.sansMedium, fontSize: 15, color: p.ink.a75 },
     next: {
       flex: 1,
       paddingVertical: 16,
       borderRadius: radius.lg,
-      backgroundColor: color.accent,
+      backgroundColor: p.color.accent,
       alignItems: 'center',
     },
-    nextPressed: { backgroundColor: color.accentHover },
-    nextText: { fontFamily: t.font.sansMedium, fontSize: 15.5, color: color.onAccent },
+    nextPressed: { backgroundColor: p.color.accentHover },
+    nextText: { fontFamily: t.font.sansMedium, fontSize: 15.5, color: p.color.onAccent },
     doneWrap: {
       flex: 1,
       alignItems: 'center',
@@ -285,12 +287,12 @@ const makeStyles = (t: Typo) =>
       gap: 16,
       paddingHorizontal: 18,
     },
-    doneTitle: { fontFamily: t.font.serif, fontSize: 34, lineHeight: t.line(34, 37), color: color.ink, textAlign: 'center' },
+    doneTitle: { fontFamily: t.font.serif, fontSize: 34, lineHeight: t.line(34, 37), color: p.color.ink, textAlign: 'center' },
     doneBody: {
       fontFamily: t.font.sans,
       fontSize: 14,
       lineHeight: t.line(14, 21),
-      color: ink.a50,
+      color: p.ink.a50,
       textAlign: 'center',
     },
     doneActions: { flexDirection: 'row', gap: 10, marginTop: 6 },
@@ -298,16 +300,16 @@ const makeStyles = (t: Typo) =>
       paddingVertical: 14,
       paddingHorizontal: 20,
       borderRadius: radius.md,
-      backgroundColor: color.accent,
+      backgroundColor: p.color.accent,
     },
-    donePrimaryPressed: { backgroundColor: color.accentHover },
-    donePrimaryText: { fontFamily: t.font.sansMedium, fontSize: 14, color: color.onAccent },
+    donePrimaryPressed: { backgroundColor: p.color.accentHover },
+    donePrimaryText: { fontFamily: t.font.sansMedium, fontSize: 14, color: p.color.onAccent },
     doneSecondary: {
       paddingVertical: 14,
       paddingHorizontal: 20,
       borderRadius: radius.md,
-      backgroundColor: surface.s08,
+      backgroundColor: p.surface.s08,
     },
-    doneSecondaryPressed: { backgroundColor: surface.s11 },
-    doneSecondaryText: { fontFamily: t.font.sansMedium, fontSize: 14, color: color.ink },
+    doneSecondaryPressed: { backgroundColor: p.surface.s11 },
+    doneSecondaryText: { fontFamily: t.font.sansMedium, fontSize: 14, color: p.color.ink },
   });

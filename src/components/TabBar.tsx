@@ -4,7 +4,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useI18n } from '../i18n';
-import { color, ink, radius, surface, type Typo } from '../theme/tokens';
+import { useTheme } from '../theme';
+import { radius, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
 import { tapLight } from '../util/haptics';
 
@@ -16,6 +17,7 @@ const TAB_IDS: readonly TabId[] = ['home', 'saved', 'packs'];
 export function TabBar({ active, onSelect }: { active: TabId; onSelect: (id: TabId) => void }) {
   const insets = useSafeAreaInsets();
   const { t } = useI18n();
+  const { mode } = useTheme();
   const styles = useStyles(makeStyles);
   const names: Record<TabId, string> = {
     home: t.tabPlay,
@@ -25,7 +27,7 @@ export function TabBar({ active, onSelect }: { active: TabId; onSelect: (id: Tab
 
   return (
     <View style={[styles.wrap, { bottom: Math.max(insets.bottom, 16) + 14 }]} pointerEvents="box-none">
-      <BlurView intensity={40} tint="dark" style={styles.shell}>
+      <BlurView intensity={40} tint={mode === 'light' ? 'light' : 'dark'} style={styles.shell}>
         {TAB_IDS.map((id) => {
           const on = id === active;
           return (
@@ -53,7 +55,7 @@ export function TabBar({ active, onSelect }: { active: TabId; onSelect: (id: Tab
   );
 }
 
-const makeStyles = (t: Typo) =>
+const makeStyles = (t: Typo, p: Palette) =>
   StyleSheet.create({
     wrap: { position: 'absolute', left: 14, right: 14 },
     shell: {
@@ -62,13 +64,16 @@ const makeStyles = (t: Typo) =>
       padding: 6,
       borderRadius: radius.pill,
       borderWidth: 1,
-      borderColor: surface.borderSoft,
-      backgroundColor: color.tabShell,
+      borderColor: p.surface.borderSoft,
+      backgroundColor: p.color.tabShell,
       overflow: 'hidden',
     },
     tab: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: radius.pill },
-    tabOn: { backgroundColor: color.ink },
-    tabPressed: { backgroundColor: surface.s07 },
-    label: { fontFamily: t.font.sansMedium, fontSize: 13, color: ink.a60 },
-    labelOn: { color: color.cardInk },
+    // The active pill is paper, not chrome — `card`/`cardInk`, not `ink`,
+    // because `ink` flips with the theme and would collapse into `cardInk`
+    // in light mode (dark text on a now-dark pill).
+    tabOn: { backgroundColor: p.color.card },
+    tabPressed: { backgroundColor: p.surface.s07 },
+    label: { fontFamily: t.font.sansMedium, fontSize: 13, color: p.ink.a60 },
+    labelOn: { color: p.color.cardInk },
   });

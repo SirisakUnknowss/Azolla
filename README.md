@@ -1,4 +1,4 @@
-# DeepTalk
+# Azolla
 
 A conversation-card app for people sitting across from each other. Pick a
 relationship, choose how deep you want to go, and the app deals questions one
@@ -229,7 +229,7 @@ npx eas login && npx eas build:configure
 
 ### Store metadata to fill in before submitting
 
-- `ios.bundleIdentifier` and `android.package` are both `com.deeptalk.app` —
+- `ios.bundleIdentifier` and `android.package` are both `com.azolla.app` —
   change these to your own reverse-domain identifier before the first upload,
   because they cannot be changed afterwards.
 - Privacy: the app collects nothing and makes no network calls. Everything —

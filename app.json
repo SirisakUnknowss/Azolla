@@ -1,32 +1,31 @@
 {
   "expo": {
-    "name": "DeepTalk",
-    "slug": "deeptalk",
+    "name": "Azolla",
+    "slug": "azolla",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "deeptalk",
-    "userInterfaceStyle": "dark",
-    "backgroundColor": "#14101b",
-    "primaryColor": "#ff7a54",
+    "scheme": "azolla",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#0a0e0b",
+    "primaryColor": "#8fd39a",
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "bundleIdentifier": "com.deeptalk.app",
+      "bundleIdentifier": "com.azolla.app",
       "buildNumber": "1",
       "supportsTablet": false,
       "infoPlist": {
-        "UIUserInterfaceStyle": "Dark",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.deeptalk.app",
+      "package": "com.azolla.app",
       "versionCode": 1,
       "predictiveBackGestureEnabled": false,
       "adaptiveIcon": {
-        "backgroundColor": "#0d0a12",
+        "backgroundColor": "#0a0e0b",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -36,11 +35,11 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
       "output": "single",
-      "name": "DeepTalk",
-      "shortName": "DeepTalk",
+      "name": "Azolla",
+      "shortName": "Azolla",
       "lang": "en",
-      "themeColor": "#14101b",
-      "backgroundColor": "#14101b",
+      "themeColor": "#0a0e0b",
+      "backgroundColor": "#0a0e0b",
       "description": "Conversation cards for people sitting across from each other.",
       "display": "standalone"
     },
@@ -52,7 +51,7 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 190,
           "resizeMode": "contain",
-          "backgroundColor": "#14101b"
+          "backgroundColor": "#0a0e0b"
         }
       ]
     ],

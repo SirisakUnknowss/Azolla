@@ -2,16 +2,18 @@ import { useMemo } from 'react';
 
 import { useI18n } from '../i18n';
 
-import { typo, type Typo } from './tokens';
+import { useTheme } from './index';
+import { typo, type Palette, type Typo } from './tokens';
 
 /**
- * Build a screen's stylesheet for the active language.
+ * Build a screen's stylesheet for the active language and theme.
  *
- * Font family and leading are the only things that move, so the sheet is
- * rebuilt only when the language does — a `StyleSheet.create` per language, not
- * per render.
+ * Font family, leading and every colour are the only things that move, so the
+ * sheet is rebuilt only when one of those does — a `StyleSheet.create` per
+ * language/theme pair, not per render.
  */
-export function useStyles<T>(make: (t: Typo) => T): T {
+export function useStyles<T>(make: (t: Typo, p: Palette) => T): T {
   const { lang } = useI18n();
-  return useMemo(() => make(typo(lang)), [make, lang]);
+  const { mode, palette } = useTheme();
+  return useMemo(() => make(typo(lang), palette), [make, lang, mode, palette]);
 }

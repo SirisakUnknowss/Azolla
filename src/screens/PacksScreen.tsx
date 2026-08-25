@@ -13,18 +13,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LangToggle } from '../components/LangToggle';
+import { ThemeToggle } from '../components/ThemeToggle';
 import { PACK_IDS, type PackId } from '../data/decks';
 import { useI18n } from '../i18n';
 import { useStore } from '../state/store';
-import {
-  accentAlpha,
-  color,
-  ink,
-  radius,
-  screenPad,
-  surface,
-  type Typo,
-} from '../theme/tokens';
+import { useTheme } from '../theme';
+import { radius, screenPad, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
 import { tapLight } from '../util/haptics';
 
@@ -38,17 +32,19 @@ import { tapLight } from '../util/haptics';
 function SettingSwitch({
   value,
   onValueChange,
+  p,
 }: {
   value: boolean;
   onValueChange: (next: boolean) => void;
+  p: Palette;
 }) {
   return (
     <Switch
       value={value}
       onValueChange={onValueChange}
-      trackColor={{ false: surface.s11, true: accentAlpha.a50 }}
-      thumbColor={value ? color.accent : '#8d8598'}
-      {...(Platform.OS === 'web' ? ({ activeThumbColor: color.accent } as object) : null)}
+      trackColor={{ false: p.surface.s11, true: p.accentAlpha.a50 }}
+      thumbColor={value ? p.color.accent : '#8d8598'}
+      {...(Platform.OS === 'web' ? ({ activeThumbColor: p.color.accent } as object) : null)}
     />
   );
 }
@@ -61,6 +57,7 @@ export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }
   const insets = useSafeAreaInsets();
   const { custom, addCustom, removeCustom, prefs, setPrefs } = useStore();
   const { t, content } = useI18n();
+  const { palette: p } = useTheme();
   const styles = useStyles(makeStyles);
   const [selected, setSelected] = useState<PackId | null>(null);
   const [draft, setDraft] = useState('');
@@ -116,8 +113,8 @@ export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }
                 style={[
                   styles.pack,
                   {
-                    backgroundColor: on ? accentAlpha.a12 : surface.s045,
-                    borderColor: on ? accentAlpha.a45 : surface.border,
+                    backgroundColor: on ? p.accentAlpha.a12 : p.surface.s045,
+                    borderColor: on ? p.accentAlpha.a45 : p.surface.border,
                   },
                 ]}
               >
@@ -128,10 +125,10 @@ export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }
                 <View
                   style={[
                     styles.tag,
-                    { backgroundColor: on ? accentAlpha.a22 : surface.s07 },
+                    { backgroundColor: on ? p.accentAlpha.a22 : p.surface.s07 },
                   ]}
                 >
-                  <Text style={[styles.tagText, { color: on ? color.accentSoft : ink.a55 }]}>
+                  <Text style={[styles.tagText, { color: on ? p.color.accentSoft : p.ink.a55 }]}>
                     {pack.tag}
                   </Text>
                 </View>
@@ -159,14 +156,14 @@ export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }
                   styles.tag,
                   {
                     backgroundColor:
-                      selected === 'custom' ? accentAlpha.a22 : surface.s07,
+                      selected === 'custom' ? p.accentAlpha.a22 : p.surface.s07,
                   },
                 ]}
               >
                 <Text
                   style={[
                     styles.tagText,
-                    { color: selected === 'custom' ? color.accentSoft : ink.a55 },
+                    { color: selected === 'custom' ? p.color.accentSoft : p.ink.a55 },
                   ]}
                 >
                   {selected === 'custom' ? t.selected : t.select}
@@ -181,7 +178,7 @@ export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }
               onChangeText={setDraft}
               onSubmitEditing={submitCustom}
               placeholder={t.customPlaceholder}
-              placeholderTextColor={ink.a35}
+              placeholderTextColor={p.ink.a35}
               returnKeyType="done"
               style={styles.input}
             />
@@ -218,12 +215,19 @@ export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }
 
         <Text style={styles.sectionEyebrow}>{t.appSection}</Text>
         <View style={[styles.settings, styles.settingsGap]}>
-          <View style={[styles.settingRow, styles.settingRowLast]}>
+          <View style={styles.settingRow}>
             <View style={styles.settingText}>
               <Text style={styles.settingName}>{t.language}</Text>
               <Text style={styles.settingBlurb}>{t.languageBlurb}</Text>
             </View>
             <LangToggle />
+          </View>
+          <View style={[styles.settingRow, styles.settingRowLast]}>
+            <View style={styles.settingText}>
+              <Text style={styles.settingName}>{t.theme}</Text>
+              <Text style={styles.settingBlurb}>{t.themeBlurb}</Text>
+            </View>
+            <ThemeToggle />
           </View>
         </View>
 
@@ -235,8 +239,10 @@ export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }
               <Text style={styles.settingBlurb}>{t.turnTimerBlurb}</Text>
             </View>
             <SettingSwitch
+              key={`showTimer-${p.color.accent}`}
               value={prefs.showTimer}
               onValueChange={(v) => setPrefs({ showTimer: v })}
+              p={p}
             />
           </View>
 
@@ -275,8 +281,10 @@ export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }
               <Text style={styles.settingBlurb}>{t.allowPassingBlurb}</Text>
             </View>
             <SettingSwitch
+              key={`allowSkip-${p.color.accent}`}
               value={prefs.allowSkip}
               onValueChange={(v) => setPrefs({ allowSkip: v })}
+              p={p}
             />
           </View>
         </View>
@@ -284,7 +292,7 @@ export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }
 
       {selected && (
         <LinearGradient
-          colors={['rgba(20,16,27,0)', color.bg, color.bg]}
+          colors={[p.color.bgFade, p.color.bg, p.color.bg]}
           locations={[0, 0.45, 1]}
           style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 84 }]}
           pointerEvents="box-none"
@@ -306,12 +314,12 @@ export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }
   );
 }
 
-const makeStyles = (t: Typo) =>
+const makeStyles = (t: Typo, p: Palette) =>
   StyleSheet.create({
-    root: { flex: 1, backgroundColor: color.bg },
+    root: { flex: 1, backgroundColor: p.color.bg },
     content: { paddingHorizontal: screenPad },
-    title: { fontFamily: t.font.serif, fontSize: 36, lineHeight: t.line(36, 38), color: color.ink, marginBottom: 6 },
-    subtitle: { fontFamily: t.font.sans, fontSize: 13.5, lineHeight: t.line(13.5, 20), color: ink.a45, marginBottom: 24 },
+    title: { fontFamily: t.font.serif, fontSize: 36, lineHeight: t.line(36, 38), color: p.color.ink, marginBottom: 6 },
+    subtitle: { fontFamily: t.font.sans, fontSize: 13.5, lineHeight: t.line(13.5, 20), color: p.ink.a45, marginBottom: 24 },
     packList: { gap: 11, marginBottom: 26 },
     pack: {
       flexDirection: 'row',
@@ -323,8 +331,8 @@ const makeStyles = (t: Typo) =>
       borderWidth: 1,
     },
     packText: { flex: 1 },
-    packName: { fontFamily: t.font.serif, fontSize: 22, lineHeight: t.line(22, 25), color: color.ink, marginBottom: 5 },
-    packBlurb: { fontFamily: t.font.sans, fontSize: 12, lineHeight: t.line(12, 17), color: ink.a48 },
+    packName: { fontFamily: t.font.serif, fontSize: 22, lineHeight: t.line(22, 25), color: p.color.ink, marginBottom: 5 },
+    packBlurb: { fontFamily: t.font.sans, fontSize: 12, lineHeight: t.line(12, 17), color: p.ink.a48 },
     tag: { paddingVertical: 7, paddingHorizontal: 11, borderRadius: radius.pill },
     tagText: { fontFamily: t.font.sansMedium, fontSize: 12 },
     customBox: {
@@ -332,7 +340,7 @@ const makeStyles = (t: Typo) =>
       borderRadius: radius.xl,
       borderWidth: 1,
       borderStyle: 'dashed',
-      borderColor: surface.dashedStrong,
+      borderColor: p.surface.dashedStrong,
       marginBottom: 30,
     },
     customHead: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 14 },
@@ -344,9 +352,9 @@ const makeStyles = (t: Typo) =>
       paddingHorizontal: 14,
       borderRadius: radius.sm,
       borderWidth: 1,
-      borderColor: surface.borderStrong,
-      backgroundColor: surface.s04,
-      color: color.ink,
+      borderColor: p.surface.borderStrong,
+      backgroundColor: p.surface.s04,
+      color: p.color.ink,
       fontFamily: t.font.sans,
       fontSize: 13.5,
     },
@@ -354,22 +362,22 @@ const makeStyles = (t: Typo) =>
       paddingHorizontal: 16,
       justifyContent: 'center',
       borderRadius: radius.sm,
-      backgroundColor: surface.s10,
+      backgroundColor: p.surface.s10,
     },
-    addBtnPressed: { backgroundColor: surface.s07 },
-    addBtnText: { fontFamily: t.font.sansMedium, fontSize: 13.5, color: color.ink },
+    addBtnPressed: { backgroundColor: p.surface.s07 },
+    addBtnText: { fontFamily: t.font.sansMedium, fontSize: 13.5, color: p.color.ink },
     customList: { gap: 8 },
     customRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 9 },
-    customDash: { fontFamily: t.font.sans, fontSize: 13.5, lineHeight: t.line(13.5, 19), color: accentAlpha.a85 },
-    customText: { flex: 1, fontFamily: t.font.sans, fontSize: 13.5, lineHeight: t.line(13.5, 19), color: ink.a72 },
-    customRemove: { fontFamily: t.font.sans, fontSize: 16, lineHeight: t.line(13.5, 19), color: ink.a35 },
-    sectionEyebrow: { ...t.eyebrow, color: ink.a40, marginBottom: 12 },
+    customDash: { fontFamily: t.font.sans, fontSize: 13.5, lineHeight: t.line(13.5, 19), color: p.accentAlpha.a85 },
+    customText: { flex: 1, fontFamily: t.font.sans, fontSize: 13.5, lineHeight: t.line(13.5, 19), color: p.ink.a72 },
+    customRemove: { fontFamily: t.font.sans, fontSize: 16, lineHeight: t.line(13.5, 19), color: p.ink.a35 },
+    sectionEyebrow: { ...t.eyebrow, color: p.ink.a40, marginBottom: 12 },
     settingsGap: { marginBottom: 26 },
     settings: {
       borderRadius: radius.xl,
-      backgroundColor: surface.s045,
+      backgroundColor: p.surface.s045,
       borderWidth: 1,
-      borderColor: surface.border,
+      borderColor: p.surface.border,
       overflow: 'hidden',
     },
     settingRow: {
@@ -379,12 +387,12 @@ const makeStyles = (t: Typo) =>
       paddingVertical: 14,
       paddingHorizontal: 16,
       borderBottomWidth: 1,
-      borderBottomColor: surface.border,
+      borderBottomColor: p.surface.border,
     },
     settingRowLast: { borderBottomWidth: 0 },
     settingText: { flex: 1 },
-    settingName: { fontFamily: t.font.sansMedium, fontSize: 15, color: color.ink },
-    settingBlurb: { fontFamily: t.font.sans, fontSize: 11.5, lineHeight: t.line(11.5, 16), color: ink.a45, marginTop: 2 },
+    settingName: { fontFamily: t.font.sansMedium, fontSize: 15, color: p.color.ink },
+    settingBlurb: { fontFamily: t.font.sans, fontSize: 11.5, lineHeight: t.line(11.5, 16), color: p.ink.a45, marginTop: 2 },
     stepper: { flexDirection: 'row', gap: 8 },
     stepBtn: {
       width: 36,
@@ -392,9 +400,9 @@ const makeStyles = (t: Typo) =>
       borderRadius: 99,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: surface.s07,
+      backgroundColor: p.surface.s07,
     },
-    stepGlyph: { fontFamily: t.font.sansMedium, fontSize: 18, color: color.ink },
+    stepGlyph: { fontFamily: t.font.sansMedium, fontSize: 18, color: p.color.ink },
     footer: {
       position: 'absolute',
       left: 0,
@@ -406,9 +414,9 @@ const makeStyles = (t: Typo) =>
     cta: {
       paddingVertical: 17,
       borderRadius: radius.lg,
-      backgroundColor: color.accent,
+      backgroundColor: p.color.accent,
       alignItems: 'center',
     },
-    ctaPressed: { backgroundColor: color.accentHover },
-    ctaText: { fontFamily: t.font.sansMedium, fontSize: 16, color: color.onAccent },
+    ctaPressed: { backgroundColor: p.color.accentHover },
+    ctaText: { fontFamily: t.font.sansMedium, fontSize: 16, color: p.color.onAccent },
   });
