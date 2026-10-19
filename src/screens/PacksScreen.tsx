@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -17,6 +18,7 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { PACK_IDS, type PackId } from '../data/decks';
 import { useI18n } from '../i18n';
 import { useStore } from '../state/store';
+import { useSubscription } from '../subscription';
 import { useTheme } from '../theme';
 import { radius, screenPad, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
@@ -53,16 +55,32 @@ const TIMER_MIN = 30;
 const TIMER_MAX = 300;
 const TIMER_STEP = 15;
 
-export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }) {
+/** Deployed alongside the web build from `public/privacy.html` — see README. */
+const PRIVACY_URL = 'https://sirisakunknowss.github.io/DeepTalk/privacy.html';
+
+export function PacksScreen({
+  onPlayPack,
+  onOpenPaywall,
+}: {
+  onPlayPack: (id: PackId) => void;
+  onOpenPaywall: () => void;
+}) {
   const insets = useSafeAreaInsets();
   const { custom, addCustom, removeCustom, prefs, setPrefs } = useStore();
   const { t, content } = useI18n();
   const { palette: p } = useTheme();
+  const { isPackLocked } = useSubscription();
   const styles = useStyles(makeStyles);
   const [selected, setSelected] = useState<PackId | null>(null);
   const [draft, setDraft] = useState('');
 
+  const customLocked = isPackLocked('custom');
+
   const submitCustom = () => {
+    if (customLocked) {
+      onOpenPaywall();
+      return;
+    }
     if (!draft.trim()) return;
     addCustom(draft);
     setDraft('');
@@ -100,14 +118,23 @@ export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }
           {PACK_IDS.map((id) => {
             const on = selected === id;
             const pack = content.packs[id];
+            const locked = isPackLocked(id);
             return (
               <Pressable
                 key={id}
                 accessibilityRole="button"
                 accessibilityState={{ selected: on }}
-                accessibilityLabel={t.packA11y(pack.name, pack.blurb, pack.questions.length)}
+                accessibilityLabel={
+                  locked
+                    ? t.lockedA11y(pack.name)
+                    : t.packA11y(pack.name, pack.blurb, pack.questions.length)
+                }
                 onPress={() => {
                   tapLight();
+                  if (locked) {
+                    onOpenPaywall();
+                    return;
+                  }
                   setSelected(on ? null : id);
                 }}
                 style={[
@@ -118,20 +145,26 @@ export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }
                   },
                 ]}
               >
-                <View style={styles.packText}>
+                <View style={[styles.packText, locked && styles.lockedText]}>
                   <Text style={styles.packName}>{pack.name}</Text>
                   <Text style={styles.packBlurb}>{pack.blurb}</Text>
                 </View>
-                <View
-                  style={[
-                    styles.tag,
-                    { backgroundColor: on ? p.accentAlpha.a22 : p.surface.s07 },
-                  ]}
-                >
-                  <Text style={[styles.tagText, { color: on ? p.color.accentSoft : p.ink.a55 }]}>
-                    {pack.tag}
-                  </Text>
-                </View>
+                {locked ? (
+                  <Text style={styles.lockGlyph}>🔒</Text>
+                ) : (
+                  <View
+                    style={[
+                      styles.tag,
+                      { backgroundColor: on ? p.accentAlpha.a22 : p.surface.s07 },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.tagText, { color: on ? p.color.accentSoft : p.ink.a55 }]}
+                    >
+                      {pack.tag}
+                    </Text>
+                  </View>
+                )}
               </Pressable>
             );
           })}
@@ -139,11 +172,23 @@ export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }
 
         <View style={styles.customBox}>
           <View style={styles.customHead}>
-            <View style={styles.customHeadText}>
+            <View style={[styles.customHeadText, customLocked && styles.lockedText]}>
               <Text style={styles.packName}>{t.writeYourOwn}</Text>
               <Text style={styles.packBlurb}>{t.customCount(custom.length)}</Text>
             </View>
-            {custom.length > 0 && (
+            {customLocked && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t.lockedA11y(t.writeYourOwn)}
+                onPress={() => {
+                  tapLight();
+                  onOpenPaywall();
+                }}
+              >
+                <Text style={styles.lockGlyph}>🔒</Text>
+              </Pressable>
+            )}
+            {!customLocked && custom.length > 0 && (
               <Pressable
                 accessibilityRole="button"
                 accessibilityState={{ selected: selected === 'custom' }}
@@ -177,6 +222,7 @@ export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }
               value={draft}
               onChangeText={setDraft}
               onSubmitEditing={submitCustom}
+              editable={!customLocked}
               placeholder={t.customPlaceholder}
               placeholderTextColor={p.ink.a35}
               returnKeyType="done"
@@ -222,13 +268,28 @@ export function PacksScreen({ onPlayPack }: { onPlayPack: (id: PackId) => void }
             </View>
             <LangToggle />
           </View>
-          <View style={[styles.settingRow, styles.settingRowLast]}>
+          <View style={styles.settingRow}>
             <View style={styles.settingText}>
               <Text style={styles.settingName}>{t.theme}</Text>
               <Text style={styles.settingBlurb}>{t.themeBlurb}</Text>
             </View>
             <ThemeToggle />
           </View>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={t.privacyPolicyA11y}
+            onPress={() => {
+              tapLight();
+              Linking.openURL(PRIVACY_URL);
+            }}
+            style={[styles.settingRow, styles.settingRowLast]}
+          >
+            <View style={styles.settingText}>
+              <Text style={styles.settingName}>{t.privacyPolicy}</Text>
+              <Text style={styles.settingBlurb}>{t.privacyPolicyBlurb}</Text>
+            </View>
+            <Text style={styles.linkGlyph}>↗</Text>
+          </Pressable>
         </View>
 
         <Text style={styles.sectionEyebrow}>{t.sessionSection}</Text>
@@ -335,6 +396,9 @@ const makeStyles = (t: Typo, p: Palette) =>
     packBlurb: { fontFamily: t.font.sans, fontSize: 12, lineHeight: t.line(12, 17), color: p.ink.a48 },
     tag: { paddingVertical: 7, paddingHorizontal: 11, borderRadius: radius.pill },
     tagText: { fontFamily: t.font.sansMedium, fontSize: 12 },
+    lockGlyph: { fontSize: 14 },
+    // Dimmed rather than hidden: seeing what is behind the paywall is the point.
+    lockedText: { opacity: 0.55 },
     customBox: {
       padding: 18,
       borderRadius: radius.xl,
@@ -393,6 +457,7 @@ const makeStyles = (t: Typo, p: Palette) =>
     settingText: { flex: 1 },
     settingName: { fontFamily: t.font.sansMedium, fontSize: 15, color: p.color.ink },
     settingBlurb: { fontFamily: t.font.sans, fontSize: 11.5, lineHeight: t.line(11.5, 16), color: p.ink.a45, marginTop: 2 },
+    linkGlyph: { fontSize: 15, color: p.ink.a45 },
     stepper: { flexDirection: 'row', gap: 8 },
     stepBtn: {
       width: 36,

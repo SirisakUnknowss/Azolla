@@ -7,6 +7,7 @@ import { LangToggle } from '../components/LangToggle';
 import { HUES, RELATIONSHIPS, type Relationship } from '../data/decks';
 import { useI18n } from '../i18n';
 import { useStore } from '../state/store';
+import { useSubscription } from '../subscription';
 import { useTheme } from '../theme';
 import { radius, screenPad, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
@@ -23,6 +24,7 @@ export function HomeScreen({ onPickRelationship, onStartDaily }: Props) {
   const { streak } = useStore();
   const { t, content } = useI18n();
   const { palette: p } = useTheme();
+  const { isRelationshipLocked } = useSubscription();
   const styles = useStyles(makeStyles);
   const daily = useMemo(() => dailyQuestion(content.daily), [content]);
 
@@ -56,21 +58,25 @@ export function HomeScreen({ onPickRelationship, onStartDaily }: Props) {
           const [hue, soft] = HUES[id];
           const name = content.rel[id];
           const blurb = content.blurb[id];
+          const locked = isRelationshipLocked(id);
           return (
             <Pressable
               key={id}
               accessibilityRole="button"
-              accessibilityLabel={`${name}. ${blurb}`}
+              accessibilityLabel={locked ? t.lockedA11y(name) : `${name}. ${blurb}`}
               onPress={() => {
                 tapLight();
                 onPickRelationship(id);
               }}
               style={({ pressed }) => [styles.relCard, pressed && styles.relCardPressed]}
             >
-              <View style={[styles.relIcon, { backgroundColor: soft }]}>
-                <View style={[styles.relIconDot, { backgroundColor: hue }]} />
+              <View style={styles.relTop}>
+                <View style={[styles.relIcon, { backgroundColor: soft }]}>
+                  <View style={[styles.relIconDot, { backgroundColor: hue }]} />
+                </View>
+                {locked && <Text style={styles.lockGlyph}>🔒</Text>}
               </View>
-              <View>
+              <View style={locked && styles.lockedText}>
                 <Text style={styles.relName}>{name}</Text>
                 <Text style={styles.relBlurb}>{blurb}</Text>
               </View>
@@ -149,8 +155,12 @@ const makeStyles = (t: Typo, p: Palette) =>
       borderColor: p.surface.border,
     },
     relCardPressed: { backgroundColor: p.surface.s09 },
+    relTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     relIcon: { width: 26, height: 26, borderRadius: 99, alignItems: 'center', justifyContent: 'center' },
     relIconDot: { width: 9, height: 9, borderRadius: 99 },
+    lockGlyph: { fontSize: 12 },
+    // Dimmed rather than hidden: seeing what is behind the paywall is the point.
+    lockedText: { opacity: 0.55 },
     relName: { fontFamily: t.font.sansMedium, fontSize: 16, color: p.color.ink, marginBottom: 3 },
     relBlurb: { fontFamily: t.font.sans, fontSize: 11.5, lineHeight: t.line(11.5, 15.5), color: p.ink.a45 },
     daily: {

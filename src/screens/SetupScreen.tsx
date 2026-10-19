@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { bandFor, HUES, MODE_IDS, type ModeId, type Relationship } from '../data/decks';
 import { useI18n } from '../i18n';
 import { useStore } from '../state/store';
+import { useSubscription } from '../subscription';
 import { useTheme } from '../theme';
 import { radius, screenPad, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
@@ -29,6 +30,7 @@ type Props = {
   onChangeMode: (mode: ModeId) => void;
   onBack: () => void;
   onStart: () => void;
+  onOpenPaywall: () => void;
 };
 
 export function SetupScreen({
@@ -39,11 +41,13 @@ export function SetupScreen({
   onChangeMode,
   onBack,
   onStart,
+  onOpenPaywall,
 }: Props) {
   const insets = useSafeAreaInsets();
   const { players, addPlayer, removePlayer } = useStore();
   const { t, content, typo } = useI18n();
   const { palette: p } = useTheme();
+  const { isLevelLocked } = useSubscription();
   const styles = useStyles(makeStyles);
   const [nameDraft, setNameDraft] = useState('');
 
@@ -84,25 +88,41 @@ export function SetupScreen({
         <Text style={styles.title}>{t.setupTitle}</Text>
 
         <View style={styles.bars}>
-          {Array.from({ length: 10 }, (_, i) => (
-            <Pressable
-              key={i}
-              accessibilityRole="button"
-              accessibilityLabel={t.setDepthA11y(i + 1)}
-              onPress={() => {
-                tapLight();
-                onChangeDepth(i + 1);
-              }}
-              style={styles.barHit}
-            >
-              <View
-                style={[
-                  styles.bar,
-                  { height: 16 + i * 4, backgroundColor: i < depth ? hue : p.surface.s11 },
-                ]}
-              />
-            </Pressable>
-          ))}
+          {Array.from({ length: 10 }, (_, i) => {
+            const level = i + 1;
+            const locked = isLevelLocked(level);
+            return (
+              <Pressable
+                key={i}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  locked ? t.lockedA11y(t.levelOfTen(level)) : t.setDepthA11y(level)
+                }
+                onPress={() => {
+                  tapLight();
+                  if (locked) {
+                    onOpenPaywall();
+                    return;
+                  }
+                  onChangeDepth(level);
+                }}
+                style={styles.barHit}
+              >
+                <View
+                  style={[
+                    styles.bar,
+                    {
+                      height: 16 + i * 4,
+                      backgroundColor: i < depth ? hue : p.surface.s11,
+                    },
+                    // A locked level still shows its height, so the dial reads
+                    // as a ladder that continues past where you can go.
+                    locked && styles.barLocked,
+                  ]}
+                />
+              </Pressable>
+            );
+          })}
         </View>
 
         <View style={styles.depthRow}>
@@ -243,6 +263,7 @@ const makeStyles = (t: Typo, p: Palette) =>
     bars: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, marginBottom: 14 },
     barHit: { flex: 1, justifyContent: 'flex-end', paddingVertical: 6 },
     bar: { borderRadius: 6 },
+    barLocked: { opacity: 0.35 },
     depthRow: {
       flexDirection: 'row',
       alignItems: 'baseline',

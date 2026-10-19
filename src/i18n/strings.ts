@@ -102,7 +102,36 @@ const en = {
   themeLight: 'Light',
   themeDark: 'Dark',
   themeA11y: (name: string) => `Switch the app to ${name} theme`,
+  privacyPolicy: 'Privacy Policy',
+  privacyPolicyBlurb: 'What the app stores, and where',
+  privacyPolicyA11y: 'Open the privacy policy in your browser',
   dealFrom: (name: string) => `Deal from ${name}`,
+
+  // Subscription
+  locked: 'Locked',
+  lockedA11y: (name: string) => `${name} — unlock with Azolla Deeper`,
+  proName: 'Azolla Deeper',
+  proTitle: 'The questions that change something',
+  proSubtitle:
+    'Breaking the ice is free. Deeper is for the people already sitting close to you.',
+  proFeatureLevels: 'Levels 6–10 — the ones usually left unsaid',
+  proFeatureDecks: 'Every relationship: old friends, best friends, lovers, family',
+  proFeaturePacks: 'All four themed packs, including After midnight',
+  proFeatureCustom: 'Write your own questions and play them like any deck',
+  proMonthly: 'Monthly',
+  proYearly: 'Yearly',
+  proYearlyNote: 'Best value',
+  proCta: 'Subscribe',
+  proRestore: 'Restore purchase',
+  proRestored: 'Your subscription is back.',
+  proRestoreFailed: 'No previous purchase found on this account.',
+  proClose: 'Not now',
+  proCloseA11y: 'Close and keep the free version',
+  proUnavailable: 'Subscriptions are available in the iOS and Android app.',
+  proLoading: 'Loading plans…',
+  /** Apple requires auto-renewal terms on the paywall itself, not just in the store. */
+  proTerms:
+    'Payment is charged to your store account at confirmation. The subscription renews automatically unless cancelled at least 24 hours before the period ends. Manage or cancel it any time in your account settings.',
 };
 
 type Dict = typeof en;
@@ -200,7 +229,34 @@ const th: Dict = {
   themeLight: 'สว่าง',
   themeDark: 'มืด',
   themeA11y: (name: string) => `เปลี่ยนธีมแอปเป็น${name}`,
+  privacyPolicy: 'นโยบายความเป็นส่วนตัว',
+  privacyPolicyBlurb: 'แอปเก็บอะไรไว้ และเก็บที่ไหน',
+  privacyPolicyA11y: 'เปิดนโยบายความเป็นส่วนตัวในเบราว์เซอร์',
   dealFrom: (name: string) => `แจกจาก${name}`,
+
+  // Subscription
+  locked: 'ล็อกอยู่',
+  lockedA11y: (name: string) => `${name} — ปลดล็อกด้วย Azolla Deeper`,
+  proName: 'Azolla Deeper',
+  proTitle: 'คำถามที่เปลี่ยนบางอย่างระหว่างเรา',
+  proSubtitle: 'การละลายพฤติกรรมเป็นของฟรี ส่วน Deeper มีไว้สำหรับคนที่นั่งใกล้คุณอยู่แล้ว',
+  proFeatureLevels: 'ระดับ 6–10 — เรื่องที่ปกติไม่เคยพูดออกมา',
+  proFeatureDecks: 'ครบทุกความสัมพันธ์: เพื่อนเก่า เพื่อนสนิท คนรัก ครอบครัว',
+  proFeaturePacks: 'แพ็กธีมครบทั้ง 4 ชุด รวม After midnight',
+  proFeatureCustom: 'เขียนคำถามเอง แล้วเล่นได้เหมือนสำรับปกติ',
+  proMonthly: 'รายเดือน',
+  proYearly: 'รายปี',
+  proYearlyNote: 'คุ้มที่สุด',
+  proCta: 'สมัครสมาชิก',
+  proRestore: 'กู้คืนการซื้อ',
+  proRestored: 'ได้สมาชิกกลับคืนแล้ว',
+  proRestoreFailed: 'ไม่พบการซื้อก่อนหน้าในบัญชีนี้',
+  proClose: 'ไว้ก่อน',
+  proCloseA11y: 'ปิดหน้านี้และใช้เวอร์ชันฟรีต่อ',
+  proUnavailable: 'สมัครสมาชิกได้ในแอป iOS และ Android',
+  proLoading: 'กำลังโหลดแพ็กเกจ…',
+  proTerms:
+    'ระบบจะเรียกเก็บเงินผ่านบัญชีสโตร์ของคุณเมื่อยืนยันการซื้อ และต่ออายุอัตโนมัติ เว้นแต่จะยกเลิกอย่างน้อย 24 ชั่วโมงก่อนรอบถัดไป จัดการหรือยกเลิกได้ตลอดเวลาในการตั้งค่าบัญชีของคุณ',
 };
 
 export type Strings = Dict;

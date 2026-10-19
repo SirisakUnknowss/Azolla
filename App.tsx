@@ -22,10 +22,12 @@ import { deckFor, shuffle } from './src/data/session';
 import { useI18n } from './src/i18n';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { PacksScreen } from './src/screens/PacksScreen';
+import { PaywallScreen } from './src/screens/PaywallScreen';
 import { SavedScreen } from './src/screens/SavedScreen';
 import { SessionScreen, type SessionConfig } from './src/screens/SessionScreen';
 import { SetupScreen } from './src/screens/SetupScreen';
 import { StoreProvider, useStore } from './src/state/store';
+import { SubscriptionProvider, useSubscription } from './src/subscription';
 import { useTheme } from './src/theme';
 import { palette } from './src/theme/tokens';
 
@@ -42,7 +44,11 @@ function Root() {
   const store = useStore();
   const { lang, t, content } = useI18n();
   const { mode: themeMode, palette: p } = useTheme();
+  const { maxLevel, isRelationshipLocked, isPackLocked } = useSubscription();
   const [screen, setScreen] = useState<Screen>('home');
+  // The paywall sits over whatever screen opened it, so closing it puts the
+  // user back exactly where they were rather than at the tab root.
+  const [paywallOpen, setPaywallOpen] = useState(false);
   const [setupRel, setSetupRel] = useState<Relationship>('Lover');
   const [depth, setDepth] = useState(4);
   const [mode, setMode] = useState<ModeId>('pass');
@@ -69,14 +75,26 @@ function Root() {
     [store],
   );
 
-  const pickRelationship = useCallback((rel: Relationship) => {
-    setSetupRel(rel);
-    setScreen('setup');
-  }, []);
+  const pickRelationship = useCallback(
+    (rel: Relationship) => {
+      if (isRelationshipLocked(rel)) {
+        setPaywallOpen(true);
+        return;
+      }
+      setSetupRel(rel);
+      setScreen('setup');
+    },
+    [isRelationshipLocked],
+  );
 
+  // The one place a level actually turns into cards, so it is also the one
+  // place the paid levels have to be enforced. Clamping here rather than
+  // trusting the screens means a stale persisted depth from a lapsed
+  // subscription cannot keep dealing level 10.
   const dealFor = useCallback(
-    (rel: Relationship, level: number) => deckFor(rel, level, lang, store.seen),
-    [lang, store.seen],
+    (rel: Relationship, level: number) =>
+      deckFor(rel, Math.min(level, maxLevel), lang, store.seen),
+    [lang, maxLevel, store.seen],
   );
 
   const startFromSetup = useCallback(() => {
@@ -96,10 +114,16 @@ function Root() {
   const goDeeper = useCallback(
     (level: number) => {
       if (!session) return;
+      // Turning it up is exactly what the subscription is for, so a free user
+      // reaching the ceiling gets the offer rather than a silently clamped deck.
+      if (level > maxLevel) {
+        setPaywallOpen(true);
+        return;
+      }
       setDepth(level);
       openSession({ ...session, depth: level, deck: dealFor(session.rel, level) });
     },
-    [dealFor, openSession, session],
+    [dealFor, maxLevel, openSession, session],
   );
 
   const startDaily = useCallback(
@@ -121,6 +145,10 @@ function Root() {
 
   const playPack = useCallback(
     (id: PackId) => {
+      if (isPackLocked(id)) {
+        setPaywallOpen(true);
+        return;
+      }
       const pack = id === 'custom' ? null : content.packs[id];
       const questions = pack ? pack.questions : store.custom;
       if (questions.length === 0) return;
@@ -136,7 +164,17 @@ function Root() {
         deck: shuffle(questions),
       });
     },
-    [content, depth, openSession, p, t, store.custom, store.lastMode, store.lastRel],
+    [
+      content,
+      depth,
+      isPackLocked,
+      openSession,
+      p,
+      t,
+      store.custom,
+      store.lastMode,
+      store.lastRel,
+    ],
   );
 
   const leaveSession = useCallback(() => {
@@ -163,6 +201,7 @@ function Root() {
           onChangeMode={setMode}
           onBack={() => setScreen('home')}
           onStart={startFromSetup}
+          onOpenPaywall={() => setPaywallOpen(true)}
         />
       )}
 
@@ -176,9 +215,17 @@ function Root() {
       )}
 
       {screen === 'saved' && <SavedScreen />}
-      {screen === 'packs' && <PacksScreen onPlayPack={playPack} />}
+      {screen === 'packs' && (
+        <PacksScreen onPlayPack={playPack} onOpenPaywall={() => setPaywallOpen(true)} />
+      )}
 
-      {showTabs && <TabBar active={screen} onSelect={setScreen} />}
+      {showTabs && !paywallOpen && <TabBar active={screen} onSelect={setScreen} />}
+
+      {paywallOpen && (
+        <View style={StyleSheet.absoluteFill}>
+          <PaywallScreen onClose={() => setPaywallOpen(false)} />
+        </View>
+      )}
     </View>
   );
 }
@@ -212,7 +259,9 @@ export default function App() {
     <GestureHandlerRootView style={styles.root} onLayout={onLayout}>
       <SafeAreaProvider>
         <StoreProvider>
-          <Root />
+          <SubscriptionProvider>
+            <Root />
+          </SubscriptionProvider>
         </StoreProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -232,10 +232,72 @@ npx eas login && npx eas build:configure
 - `ios.bundleIdentifier` and `android.package` are both `com.azolla.app` —
   change these to your own reverse-domain identifier before the first upload,
   because they cannot be changed afterwards.
-- Privacy: the app collects nothing and makes no network calls. Everything —
-  kept questions, your written pack, players, streak — lives in on-device
-  storage only. Declare "no data collected" on both stores.
+- Privacy: the conversation side of the app collects nothing and makes no
+  network calls — kept questions, your written pack, players and streak live in
+  on-device storage only. **The subscription is the exception:** RevenueCat
+  receives an anonymous install id, the store receipt, and basic device info.
+  Declare purchase history / identifiers accordingly rather than "no data
+  collected", and list RevenueCat as a third party.
+- Privacy policy URL (required by both stores' listing forms) is
+  `https://sirisakunknowss.github.io/DeepTalk/privacy.html` — it's
+  `public/privacy.html` in this repo, copied verbatim into the web export and
+  deployed alongside the app, and also linked from Packs → App inside the
+  app itself.
 - `ITSAppUsesNonExemptEncryption` is already declared `false`.
+
+---
+
+## Subscription
+
+Paid tier is **Azolla Deeper**, sold through RevenueCat on top of App Store and
+Play billing. The free tier is the ice-breaking half of the app; what you pay
+for is depth and the people already close to you.
+
+| | Free | Deeper |
+| --- | --- | --- |
+| Levels | 1–5 | 1–10 |
+| Decks | New friend, Colleague, Stranger | all seven |
+| Themed packs | — | all four |
+| Write your own | — | ✓ |
+| Daily question | ✓ | ✓ |
+
+The whole line lives in [`src/subscription/config.ts`](src/subscription/config.ts) —
+move it there, not in the screens. Enforcement is in `dealFor` in `App.tsx`,
+which clamps the level every time a deck is dealt, so a stale persisted depth
+from a lapsed subscription cannot keep dealing level 10.
+
+### Setting it up
+
+Nothing works until the dashboards are configured — until then the app treats
+everyone as free, which is also what happens on web and in any build without
+keys.
+
+1. Create the app in **App Store Connect** and **Play Console**, with an
+   auto-renewing subscription product in each (one monthly, one yearly).
+2. In **RevenueCat**: create a project, attach both apps, add the products, put
+   them in an offering, and attach them to an entitlement with the identifier
+   **`pro`** — that string must match `PRO_ENTITLEMENT` exactly.
+3. Put the public SDK keys in `.env.local` (gitignored):
+
+```bash
+EXPO_PUBLIC_REVENUECAT_IOS_KEY=appl_xxx
+EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=goog_xxx
+```
+
+4. Purchases need native code, so **Expo Go cannot test them** — build a dev
+   client:
+
+```bash
+npx expo install expo-dev-client
+```
+
+```bash
+npm run build:ios -- --profile development
+```
+
+Test with a sandbox account on iOS and a licence-tester account on Android.
+`restorePurchases` is wired to the "Restore purchase" button on the paywall,
+which Apple requires for any non-consumable or subscription.
 
 ---
 
