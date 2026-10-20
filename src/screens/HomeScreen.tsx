@@ -53,10 +53,6 @@ export function HomeScreen({ onPickRelationship, onStartDaily, onOpenPaywall }: 
         <View style={styles.brandRow}>
           <Image source={BRAND_LOGO} style={styles.brandLogo} resizeMode="cover" />
           <Text style={styles.wordmark}>Azolla</Text>
-          <View style={styles.streakPill}>
-            <Icon name="flame" size={14} color={p.color.accent} />
-            <Text style={styles.streakText}>{streakLabel}</Text>
-          </View>
         </View>
         <View style={styles.headerRight}>
           <Pressable
@@ -103,6 +99,10 @@ export function HomeScreen({ onPickRelationship, onStartDaily, onOpenPaywall }: 
           <View style={styles.dailyBadge}>
             <Icon name="sparkle" size={14} color={p.color.accent} />
             <Text style={styles.dailyEyebrow}>{t.dailyEyebrow}</Text>
+          </View>
+          <View style={styles.streakPill}>
+            <Icon name="flame" size={13} color={p.color.accent} />
+            <Text style={styles.streakText}>{streakLabel}</Text>
           </View>
         </View>
         <Text style={styles.dailyQuestion}>"{daily}"</Text>
@@ -386,7 +386,10 @@ const makeStyles = (t: Typo, p: Palette) =>
     dailyTopRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 8,
+      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginBottom: 10,
     },
     dailyBadge: {
       flexDirection: 'row',

@@ -9,12 +9,41 @@ import { tapLight } from '../util/haptics';
 
 import { Icon } from './Icon';
 
-/** Crisp iOS-style Light | Dark segmented control with Lucide Sun & Moon icons. */
+/**
+ * In `compact` mode (Home header), renders a single 34x34 circular icon button.
+ * In full mode (Settings), renders the Light | Dark segmented control.
+ */
 export function ThemeToggle({ compact = false }: { compact?: boolean }) {
   const { t } = useI18n();
   const { mode, setMode, palette: p } = useTheme();
   const styles = useStyles(makeStyles);
   const label: Record<ThemeMode, string> = { dark: t.themeDark, light: t.themeLight };
+
+  if (compact) {
+    const nextMode: ThemeMode = mode === 'light' ? 'dark' : 'light';
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t.themeA11y(label[nextMode])}
+        hitSlop={6}
+        onPress={() => {
+          tapLight();
+          setMode(nextMode);
+        }}
+        style={({ pressed }) => [
+          styles.compactBtn,
+          pressed && { backgroundColor: p.surface.s10 },
+        ]}
+      >
+        <Icon
+          name={mode === 'light' ? 'sun' : 'moon'}
+          size={16}
+          color={p.color.accent}
+          strokeWidth={2.2}
+        />
+      </Pressable>
+    );
+  }
 
   return (
     <View style={styles.shell}>
@@ -33,11 +62,7 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
               tapLight();
               setMode(id);
             }}
-            style={[
-              styles.seg,
-              compact && styles.segCompact,
-              on && styles.segOn,
-            ]}
+            style={[styles.seg, on && styles.segOn]}
           >
             <Icon
               name={id === 'light' ? 'sun' : 'moon'}
@@ -45,9 +70,7 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
               color={iconColor}
               strokeWidth={on ? 2.25 : 1.9}
             />
-            {!compact && (
-              <Text style={[styles.label, on && styles.labelOn]}>{label[id]}</Text>
-            )}
+            <Text style={[styles.label, on && styles.labelOn]}>{label[id]}</Text>
           </Pressable>
         );
       })}
@@ -57,6 +80,16 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
 
 const makeStyles = (t: Typo, p: Palette) =>
   StyleSheet.create({
+    compactBtn: {
+      width: 34,
+      height: 34,
+      borderRadius: 99,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: p.surface.s06,
+      borderWidth: 1,
+      borderColor: p.surface.border,
+    },
     shell: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -75,10 +108,6 @@ const makeStyles = (t: Typo, p: Palette) =>
       paddingVertical: 6,
       paddingHorizontal: 11,
       borderRadius: radius.pill,
-    },
-    segCompact: {
-      paddingVertical: 6,
-      paddingHorizontal: 9,
     },
     segOn: {
       backgroundColor: p.color.card,
