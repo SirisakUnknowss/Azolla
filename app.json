@@ -6,9 +6,9 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "azolla",
-    "userInterfaceStyle": "automatic",
-    "backgroundColor": "#0a0e0b",
-    "primaryColor": "#8fd39a",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#f4f7f0",
+    "primaryColor": "#237a45",
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -38,8 +38,8 @@
       "name": "Azolla",
       "shortName": "Azolla",
       "lang": "en",
-      "themeColor": "#0a0e0b",
-      "backgroundColor": "#0a0e0b",
+      "themeColor": "#f4f7f0",
+      "backgroundColor": "#f4f7f0",
       "description": "Conversation cards for people sitting across from each other.",
       "display": "standalone"
     },
@@ -51,7 +51,7 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 190,
           "resizeMode": "contain",
-          "backgroundColor": "#0a0e0b"
+          "backgroundColor": "#f4f7f0"
         }
       ]
     ],

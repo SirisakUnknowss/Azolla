@@ -16,8 +16,7 @@ export const PRO_ENTITLEMENT = 'pro';
  * The free tier.
  *
  * Chosen to match what the app is for: breaking the ice is free, and what you
- * pay for is going deeper with the people already close to you. The three free
- * decks are the ones you reach for with someone you barely know.
+ * pay for is going deeper with the people already close to you.
  */
 export const FREE_MAX_LEVEL = 5;
 
@@ -25,10 +24,12 @@ export const FREE_RELATIONSHIPS: readonly Relationship[] = [
   'New friend',
   'Colleague',
   'Stranger',
+  'Dark mode',
+  'Sex mode',
 ];
 
-/** Themed packs and the write-your-own pack are all paid. */
-export const FREE_PACKS: readonly DeckPackId[] = [];
+/** The starter packs tagged "Free" in content are unlocked out of the box. */
+export const FREE_PACKS: readonly DeckPackId[] = ['dark', 'sex', 'first', 'years'];
 
 /**
  * Public SDK keys, which ship inside the binary by design — they identify the

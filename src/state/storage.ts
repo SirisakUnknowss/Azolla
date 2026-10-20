@@ -5,7 +5,7 @@ import { keyFor } from '../data/questions';
 import { deviceLang, LANGS, type Lang } from '../i18n/lang';
 import { THEME_MODES, type ThemeMode } from '../theme/tokens';
 
-const KEY = 'deeptalk:v1';
+const KEY = 'deeptalk:v2';
 
 export type SavedQuestion = {
   /** Language-independent identity — see `data/questions.ts`. */
@@ -59,11 +59,11 @@ export const DEFAULT_STATE: PersistedState = {
   seen: [],
   custom: [],
   players: [],
-  prefs: { timerSeconds: 90, showTimer: true, allowSkip: true, lang: deviceLang(), themeMode: 'dark' },
+  prefs: { timerSeconds: 90, showTimer: true, allowSkip: true, lang: deviceLang(), themeMode: 'light' },
   streak: { count: 0, lastPlayed: null },
-  lastRel: 'Lover',
-  lastDepth: 4,
-  lastMode: 'pass',
+  lastRel: 'New friend',
+  lastDepth: 3,
+  lastMode: 'solo',
 };
 
 /** Local calendar day as YYYY-MM-DD — deliberately not UTC. */

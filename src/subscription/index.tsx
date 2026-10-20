@@ -44,6 +44,8 @@ export type Subscription = {
   /** Resolves true when the purchase completed and the entitlement is active. */
   purchase: (pkg: PurchasesPackage) => Promise<boolean>;
   restore: () => Promise<boolean>;
+  /** Unlocks Pro in local/web preview when native store billing is unavailable. */
+  unlockPreview: () => void;
   /** Highest depth this user may deal from. */
   maxLevel: number;
   isLevelLocked: (level: number) => boolean;
@@ -123,6 +125,10 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
+  const unlockPreview = useCallback(() => {
+    setIsPro(true);
+  }, []);
+
   const value = useMemo<Subscription>(
     () => ({
       isPro,
@@ -130,13 +136,14 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       packages,
       purchase,
       restore,
+      unlockPreview,
       maxLevel: isPro ? 10 : FREE_MAX_LEVEL,
       isLevelLocked: (level) => !isPro && level > FREE_MAX_LEVEL,
       isRelationshipLocked: (rel) => !isPro && !FREE_RELATIONSHIPS.includes(rel),
       isPackLocked: (pack) =>
         !isPro && (pack === 'custom' || !FREE_PACKS.includes(pack)),
     }),
-    [isPro, ready, packages, purchase, restore],
+    [isPro, ready, packages, purchase, restore, unlockPreview],
   );
 
   return (

@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
+  Image,
   Linking,
   Platform,
   Pressable,
@@ -13,9 +14,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Icon } from '../components/Icon';
 import { LangToggle } from '../components/LangToggle';
 import { ThemeToggle } from '../components/ThemeToggle';
-import { PACK_IDS, type PackId } from '../data/decks';
+import { PACK_IDS, PACK_IMAGES, type PackId } from '../data/decks';
 import { useI18n } from '../i18n';
 import { useStore } from '../state/store';
 import { useSubscription } from '../subscription';
@@ -24,13 +26,6 @@ import { radius, screenPad, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
 import { tapLight } from '../util/haptics';
 
-/**
- * The two setting switches.
- *
- * react-native-web paints the "on" thumb with its own `activeThumbColor` — a
- * Material teal — and ignores `thumbColor` entirely, so the accent has to be
- * handed over twice for the switch to match the app on web.
- */
 function SettingSwitch({
   value,
   onValueChange,
@@ -55,8 +50,9 @@ const TIMER_MIN = 30;
 const TIMER_MAX = 300;
 const TIMER_STEP = 15;
 
-/** Deployed alongside the web build from `public/privacy.html` — see README. */
+/** Deployed alongside the web build from `public/privacy.html` and `public/terms.html`. */
 const PRIVACY_URL = 'https://sirisakunknowss.github.io/DeepTalk/privacy.html';
+const TERMS_URL = 'https://sirisakunknowss.github.io/DeepTalk/terms.html';
 
 export function PacksScreen({
   onPlayPack,
@@ -67,9 +63,9 @@ export function PacksScreen({
 }) {
   const insets = useSafeAreaInsets();
   const { custom, addCustom, removeCustom, prefs, setPrefs } = useStore();
-  const { t, content } = useI18n();
+  const { lang, t, content } = useI18n();
   const { palette: p } = useTheme();
-  const { isPackLocked } = useSubscription();
+  const { isPro, isPackLocked } = useSubscription();
   const styles = useStyles(makeStyles);
   const [selected, setSelected] = useState<PackId | null>(null);
   const [draft, setDraft] = useState('');
@@ -86,12 +82,11 @@ export function PacksScreen({
     setDraft('');
   };
 
-  // Thai has no case to lower, so the same call is a no-op there.
   const selectedName =
     selected === 'custom'
       ? t.yourPackLower
       : selected
-        ? content.packs[selected].name.toLowerCase()
+        ? content.packs[selected].name
         : '';
 
   const adjustTimer = (delta: number) => {
@@ -106,7 +101,7 @@ export function PacksScreen({
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + 20, paddingBottom: insets.bottom + (selected ? 180 : 108) },
+          { paddingTop: insets.top + 18, paddingBottom: insets.bottom + (selected ? 180 : 112) },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -114,10 +109,58 @@ export function PacksScreen({
         <Text style={styles.title}>{t.packsTitle}</Text>
         <Text style={styles.subtitle}>{t.packsSubtitle}</Text>
 
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={isPro ? 'Azolla Pro active' : t.proCta}
+          onPress={() => {
+            tapLight();
+            if (!isPro) onOpenPaywall();
+          }}
+          style={({ pressed }) => [styles.proBannerWrap, pressed && !isPro && { opacity: 0.92 }]}
+        >
+          <LinearGradient
+            colors={[p.accentAlpha.a16, p.accentAlpha.a04]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.proBanner}
+          >
+            <View style={styles.proBannerIcon}>
+              <Icon name={isPro ? 'check' : 'sparkle'} size={18} color={p.color.onAccent} />
+            </View>
+            <View style={styles.proBannerText}>
+              <Text style={styles.proBannerTitle}>
+                {isPro
+                  ? lang === 'th'
+                    ? 'สถานะสมาชิก: Azolla Pro'
+                    : 'Membership: Azolla Pro'
+                  : lang === 'th'
+                    ? 'อัปเกรดเป็น Azolla Pro'
+                    : 'Upgrade to Azolla Pro'}
+              </Text>
+              <Text style={styles.proBannerSub}>
+                {isPro
+                  ? lang === 'th'
+                    ? 'ปลดล็อกครบทุกสำรับ ทุกระดับความลึก และเขียนคำถามเองได้ไม่จำกัด'
+                    : 'All decks, all 10 depth levels, and custom cards unlocked'
+                  : lang === 'th'
+                    ? 'ปลดล็อกครบทั้ง 900 คำถาม · ทุกระดับความลึก 1–10 · เขียนคำถามเอง'
+                    : 'Unlock all 900 questions · Levels 1–10 · Custom deck'}
+              </Text>
+            </View>
+            {!isPro && (
+              <View style={styles.proBannerBtn}>
+                <Text style={styles.proBannerBtnText}>{t.proBadge}</Text>
+              </View>
+            )}
+          </LinearGradient>
+        </Pressable>
+
+        <Text style={styles.sectionEyebrow}>{t.themedPacksSection}</Text>
         <View style={styles.packList}>
           {PACK_IDS.map((id) => {
             const on = selected === id;
             const pack = content.packs[id];
+            const img = PACK_IMAGES[id];
             const locked = isPackLocked(id);
             return (
               <Pressable
@@ -140,29 +183,38 @@ export function PacksScreen({
                 style={[
                   styles.pack,
                   {
-                    backgroundColor: on ? p.accentAlpha.a12 : p.surface.s045,
-                    borderColor: on ? p.accentAlpha.a45 : p.surface.border,
+                    backgroundColor: on ? p.surface.s09 : p.surface.s045,
+                    borderColor: on ? p.color.accent : p.surface.borderStrong,
                   },
                 ]}
               >
-                <View style={[styles.packText, locked && styles.lockedText]}>
+                <Image source={img} style={styles.packImage} resizeMode="cover" />
+                <View style={styles.packText}>
                   <Text style={styles.packName}>{pack.name}</Text>
                   <Text style={styles.packBlurb}>{pack.blurb}</Text>
+                  <Text style={styles.packCountText}>
+                    {t.packQuestionsCount(pack.questions.length)}
+                  </Text>
                 </View>
                 {locked ? (
-                  <Text style={styles.lockGlyph}>🔒</Text>
+                  <View style={styles.proTag}>
+                    <Icon name="lock" size={10} color={p.ink.a55} />
+                    <Text style={styles.proTagText}>{t.locked}</Text>
+                  </View>
                 ) : (
                   <View
                     style={[
                       styles.tag,
-                      { backgroundColor: on ? p.accentAlpha.a22 : p.surface.s07 },
+                      { backgroundColor: on ? p.color.accent : p.accentAlpha.a12 },
                     ]}
                   >
-                    <Text
-                      style={[styles.tagText, { color: on ? p.color.accentSoft : p.ink.a55 }]}
-                    >
-                      {pack.tag}
-                    </Text>
+                    {on ? (
+                      <Icon name="check" size={12} color={p.color.onAccent} />
+                    ) : (
+                      <Text style={[styles.tagText, { color: p.color.accentSoft }]}>
+                        {pack.tag}
+                      </Text>
+                    )}
                   </View>
                 )}
               </Pressable>
@@ -172,7 +224,10 @@ export function PacksScreen({
 
         <View style={styles.customBox}>
           <View style={styles.customHead}>
-            <View style={[styles.customHeadText, customLocked && styles.lockedText]}>
+            <View style={styles.packIconWrap}>
+              <Icon name="pen" size={18} color={p.color.accent} />
+            </View>
+            <View style={styles.customHeadText}>
               <Text style={styles.packName}>{t.writeYourOwn}</Text>
               <Text style={styles.packBlurb}>{t.customCount(custom.length)}</Text>
             </View>
@@ -184,8 +239,10 @@ export function PacksScreen({
                   tapLight();
                   onOpenPaywall();
                 }}
+                style={styles.proTag}
               >
-                <Text style={styles.lockGlyph}>🔒</Text>
+                <Icon name="lock" size={10} color={p.ink.a55} />
+                <Text style={styles.proTagText}>{t.locked}</Text>
               </Pressable>
             )}
             {!customLocked && custom.length > 0 && (
@@ -201,14 +258,14 @@ export function PacksScreen({
                   styles.tag,
                   {
                     backgroundColor:
-                      selected === 'custom' ? p.accentAlpha.a22 : p.surface.s07,
+                      selected === 'custom' ? p.color.accent : p.accentAlpha.a12,
                   },
                 ]}
               >
                 <Text
                   style={[
                     styles.tagText,
-                    { color: selected === 'custom' ? p.color.accentSoft : p.ink.a55 },
+                    { color: selected === 'custom' ? p.color.onAccent : p.color.accentSoft },
                   ]}
                 >
                   {selected === 'custom' ? t.selected : t.select}
@@ -224,7 +281,7 @@ export function PacksScreen({
               onSubmitEditing={submitCustom}
               editable={!customLocked}
               placeholder={t.customPlaceholder}
-              placeholderTextColor={p.ink.a35}
+              placeholderTextColor={p.ink.a40}
               returnKeyType="done"
               style={styles.input}
             />
@@ -238,25 +295,27 @@ export function PacksScreen({
             </Pressable>
           </View>
 
-          <View style={styles.customList}>
-            {custom.map((q) => (
-              <View key={q} style={styles.customRow}>
-                <Text style={styles.customDash}>—</Text>
-                <Text style={styles.customText}>{q}</Text>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t.removeA11y(q)}
-                  hitSlop={8}
-                  onPress={() => {
-                    tapLight();
-                    removeCustom(q);
-                  }}
-                >
-                  <Text style={styles.customRemove}>×</Text>
-                </Pressable>
-              </View>
-            ))}
-          </View>
+          {custom.length > 0 && (
+            <View style={styles.customList}>
+              {custom.map((q) => (
+                <View key={q} style={styles.customRow}>
+                  <Text style={styles.customDash}>•</Text>
+                  <Text style={styles.customText}>{q}</Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t.removeA11y(q)}
+                    hitSlop={8}
+                    onPress={() => {
+                      tapLight();
+                      removeCustom(q);
+                    }}
+                  >
+                    <Icon name="close" size={12} color={p.ink.a45} />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         <Text style={styles.sectionEyebrow}>{t.appSection}</Text>
@@ -282,13 +341,34 @@ export function PacksScreen({
               tapLight();
               Linking.openURL(PRIVACY_URL);
             }}
-            style={[styles.settingRow, styles.settingRowLast]}
+            style={styles.settingRow}
           >
             <View style={styles.settingText}>
               <Text style={styles.settingName}>{t.privacyPolicy}</Text>
               <Text style={styles.settingBlurb}>{t.privacyPolicyBlurb}</Text>
             </View>
-            <Text style={styles.linkGlyph}>↗</Text>
+            <Icon name="external" size={14} color={p.ink.a55} />
+          </Pressable>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={lang === 'th' ? 'เปิดข้อกำหนดการใช้งาน' : 'Open Terms of Use'}
+            onPress={() => {
+              tapLight();
+              Linking.openURL(TERMS_URL);
+            }}
+            style={[styles.settingRow, styles.settingRowLast]}
+          >
+            <View style={styles.settingText}>
+              <Text style={styles.settingName}>
+                {lang === 'th' ? 'ข้อกำหนดการใช้งาน (EULA)' : 'Terms of Use (EULA)'}
+              </Text>
+              <Text style={styles.settingBlurb}>
+                {lang === 'th'
+                  ? 'เงื่อนไขการสมัครสมาชิกและเกณฑ์อายุผู้เล่น 18+'
+                  : 'Subscription terms and 18+ mature content policy'}
+              </Text>
+            </View>
+            <Icon name="external" size={14} color={p.ink.a55} />
           </Pressable>
         </View>
 
@@ -379,45 +459,160 @@ const makeStyles = (t: Typo, p: Palette) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: p.color.bg },
     content: { paddingHorizontal: screenPad },
-    title: { fontFamily: t.font.serif, fontSize: 36, lineHeight: t.line(36, 38), color: p.color.ink, marginBottom: 6 },
-    subtitle: { fontFamily: t.font.sans, fontSize: 13.5, lineHeight: t.line(13.5, 20), color: p.ink.a45, marginBottom: 24 },
-    packList: { gap: 11, marginBottom: 26 },
+    title: {
+      fontFamily: t.font.serif,
+      fontWeight: '700',
+      fontSize: 28,
+      lineHeight: t.line(28, 34),
+      color: p.color.ink,
+      marginBottom: 6,
+    },
+    subtitle: {
+      fontFamily: t.font.sans,
+      fontSize: 13.5,
+      lineHeight: t.line(13.5, 20),
+      color: p.ink.a55,
+      marginBottom: 22,
+    },
+    sectionEyebrow: { ...t.eyebrow, color: p.ink.a50, marginBottom: 10 },
+    proBannerWrap: {
+      marginBottom: 22,
+      borderRadius: radius.xl,
+      overflow: 'hidden',
+    },
+    proBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      padding: 15,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: p.accentAlpha.a28,
+    },
+    proBannerIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 13,
+      backgroundColor: p.color.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    proBannerText: {
+      flex: 1,
+      gap: 2,
+    },
+    proBannerTitle: {
+      fontFamily: t.font.sansBold,
+      fontWeight: '700',
+      fontSize: 15,
+      color: p.color.ink,
+    },
+    proBannerSub: {
+      fontFamily: t.font.sans,
+      fontSize: 12,
+      lineHeight: t.line(12, 16),
+      color: p.ink.a60,
+    },
+    proBannerBtn: {
+      paddingVertical: 6,
+      paddingHorizontal: 11,
+      borderRadius: radius.pill,
+      backgroundColor: p.color.accent,
+    },
+    proBannerBtnText: {
+      fontFamily: t.font.sansBold,
+      fontWeight: '700',
+      fontSize: 11,
+      color: p.color.onAccent,
+    },
+    packList: { gap: 11, marginBottom: 20 },
     pack: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      gap: 14,
-      padding: 18,
+      gap: 12,
+      padding: 15,
       borderRadius: radius.xl,
-      borderWidth: 1,
+      borderWidth: 1.5,
+    },
+    packImage: {
+      width: 52,
+      height: 52,
+      borderRadius: 14,
+      backgroundColor: p.surface.s06,
+    },
+    packIconWrap: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor: p.surface.s06,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     packText: { flex: 1 },
-    packName: { fontFamily: t.font.serif, fontSize: 22, lineHeight: t.line(22, 25), color: p.color.ink, marginBottom: 5 },
-    packBlurb: { fontFamily: t.font.sans, fontSize: 12, lineHeight: t.line(12, 17), color: p.ink.a48 },
-    tag: { paddingVertical: 7, paddingHorizontal: 11, borderRadius: radius.pill },
-    tagText: { fontFamily: t.font.sansMedium, fontSize: 12 },
-    lockGlyph: { fontSize: 14 },
-    // Dimmed rather than hidden: seeing what is behind the paywall is the point.
-    lockedText: { opacity: 0.55 },
+    packName: {
+      fontFamily: t.font.serif,
+      fontWeight: '700',
+      fontSize: 16.5,
+      lineHeight: t.line(16.5, 22),
+      color: p.color.ink,
+      marginBottom: 2,
+    },
+    packBlurb: {
+      fontFamily: t.font.sans,
+      fontSize: 12,
+      lineHeight: t.line(12, 17),
+      color: p.ink.a55,
+    },
+    packCountText: {
+      fontFamily: t.font.sansMedium,
+      fontWeight: '600',
+      fontSize: 11,
+      color: p.color.accentSoft,
+      marginTop: 4,
+    },
+    tag: {
+      paddingVertical: 6,
+      paddingHorizontal: 11,
+      borderRadius: radius.pill,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    tagText: { fontFamily: t.font.sansBold, fontWeight: '700', fontSize: 11.5 },
+    proTag: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingVertical: 5,
+      paddingHorizontal: 9,
+      borderRadius: radius.pill,
+      backgroundColor: p.surface.s07,
+    },
+    proTagText: {
+      fontFamily: t.font.sansBold,
+      fontWeight: '600',
+      fontSize: 10.5,
+      color: p.ink.a55,
+    },
     customBox: {
-      padding: 18,
+      padding: 16,
       borderRadius: radius.xl,
       borderWidth: 1,
-      borderStyle: 'dashed',
-      borderColor: p.surface.dashedStrong,
-      marginBottom: 30,
+      borderColor: p.surface.borderStrong,
+      backgroundColor: p.surface.s045,
+      marginBottom: 28,
     },
-    customHead: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 14 },
+    customHead: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
     customHeadText: { flex: 1 },
-    inputRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+    inputRow: { flexDirection: 'row', gap: 8 },
     input: {
       flex: 1,
-      paddingVertical: 12,
+      paddingVertical: 11,
       paddingHorizontal: 14,
       borderRadius: radius.sm,
       borderWidth: 1,
       borderColor: p.surface.borderStrong,
-      backgroundColor: p.surface.s04,
+      backgroundColor: p.surface.s05,
       color: p.color.ink,
       fontFamily: t.font.sans,
       fontSize: 13.5,
@@ -426,22 +621,32 @@ const makeStyles = (t: Typo, p: Palette) =>
       paddingHorizontal: 16,
       justifyContent: 'center',
       borderRadius: radius.sm,
-      backgroundColor: p.surface.s10,
+      backgroundColor: p.color.accent,
     },
-    addBtnPressed: { backgroundColor: p.surface.s07 },
-    addBtnText: { fontFamily: t.font.sansMedium, fontSize: 13.5, color: p.color.ink },
-    customList: { gap: 8 },
-    customRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 9 },
-    customDash: { fontFamily: t.font.sans, fontSize: 13.5, lineHeight: t.line(13.5, 19), color: p.accentAlpha.a85 },
-    customText: { flex: 1, fontFamily: t.font.sans, fontSize: 13.5, lineHeight: t.line(13.5, 19), color: p.ink.a72 },
-    customRemove: { fontFamily: t.font.sans, fontSize: 16, lineHeight: t.line(13.5, 19), color: p.ink.a35 },
-    sectionEyebrow: { ...t.eyebrow, color: p.ink.a40, marginBottom: 12 },
+    addBtnPressed: { backgroundColor: p.color.accentHover },
+    addBtnText: { fontFamily: t.font.sansMedium, fontWeight: '600', fontSize: 13.5, color: p.color.onAccent },
+    customList: { gap: 8, marginTop: 12 },
+    customRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
+    customDash: {
+      fontFamily: t.font.sansBold,
+      fontWeight: '700',
+      fontSize: 14,
+      lineHeight: t.line(13.5, 19),
+      color: p.color.accent,
+    },
+    customText: {
+      flex: 1,
+      fontFamily: t.font.sans,
+      fontSize: 13.5,
+      lineHeight: t.line(13.5, 19),
+      color: p.ink.a75,
+    },
     settingsGap: { marginBottom: 26 },
     settings: {
       borderRadius: radius.xl,
       backgroundColor: p.surface.s045,
       borderWidth: 1,
-      borderColor: p.surface.border,
+      borderColor: p.surface.borderStrong,
       overflow: 'hidden',
     },
     settingRow: {
@@ -455,9 +660,14 @@ const makeStyles = (t: Typo, p: Palette) =>
     },
     settingRowLast: { borderBottomWidth: 0 },
     settingText: { flex: 1 },
-    settingName: { fontFamily: t.font.sansMedium, fontSize: 15, color: p.color.ink },
-    settingBlurb: { fontFamily: t.font.sans, fontSize: 11.5, lineHeight: t.line(11.5, 16), color: p.ink.a45, marginTop: 2 },
-    linkGlyph: { fontSize: 15, color: p.ink.a45 },
+    settingName: { fontFamily: t.font.sansMedium, fontWeight: '600', fontSize: 14.5, color: p.color.ink },
+    settingBlurb: {
+      fontFamily: t.font.sans,
+      fontSize: 12,
+      lineHeight: t.line(12, 16),
+      color: p.ink.a55,
+      marginTop: 2,
+    },
     stepper: { flexDirection: 'row', gap: 8 },
     stepBtn: {
       width: 36,
@@ -467,21 +677,26 @@ const makeStyles = (t: Typo, p: Palette) =>
       justifyContent: 'center',
       backgroundColor: p.surface.s07,
     },
-    stepGlyph: { fontFamily: t.font.sansMedium, fontSize: 18, color: p.color.ink },
+    stepGlyph: { fontFamily: t.font.sansMedium, fontWeight: '600', fontSize: 18, color: p.color.ink },
     footer: {
       position: 'absolute',
       left: 0,
       right: 0,
       bottom: 0,
-      paddingTop: 26,
+      paddingTop: 24,
       paddingHorizontal: screenPad,
     },
     cta: {
-      paddingVertical: 17,
+      paddingVertical: 16,
       borderRadius: radius.lg,
       backgroundColor: p.color.accent,
       alignItems: 'center',
+      shadowColor: '#000',
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 4,
     },
     ctaPressed: { backgroundColor: p.color.accentHover },
-    ctaText: { fontFamily: t.font.sansMedium, fontSize: 16, color: p.color.onAccent },
+    ctaText: { fontFamily: t.font.sansMedium, fontWeight: '700', fontSize: 15.5, color: p.color.onAccent },
   });

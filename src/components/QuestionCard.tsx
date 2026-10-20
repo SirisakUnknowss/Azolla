@@ -1,5 +1,5 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useLayoutEffect } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { forwardRef, useCallback, useImperativeHandle, useLayoutEffect, useState } from 'react';
+import { Image, type ImageSourcePropType, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
@@ -13,6 +13,9 @@ import { useTheme } from '../theme';
 import { radius, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
 import { tapLight } from '../util/haptics';
+import { shareQuestion } from '../util/share';
+
+import { Icon } from './Icon';
 
 /** Horizontal travel, in points, that commits a swipe. */
 const COMMIT_DISTANCE = 90;
@@ -27,12 +30,12 @@ export type QuestionCardHandle = {
 };
 
 type Props = {
-  /** Position in the deck. Drives the deal-in animation, so two identical
-   *  question strings in a row still animate. */
   cardIndex: number;
+  totalCards?: number;
   question: string;
   relLabel: string;
   relHue: string;
+  relImage?: ImageSourcePropType;
   bandLabel: string;
   hint: string;
   saved: boolean;
@@ -41,12 +44,25 @@ type Props = {
 };
 
 export const QuestionCard = forwardRef<QuestionCardHandle, Props>(function QuestionCard(
-  { cardIndex, question, relLabel, relHue, bandLabel, hint, saved, onToggleSave, onAdvance },
+  {
+    cardIndex,
+    totalCards,
+    question,
+    relLabel,
+    relHue,
+    relImage,
+    bandLabel,
+    hint,
+    saved,
+    onToggleSave,
+    onAdvance,
+  },
   ref,
 ) {
-  const { t } = useI18n();
+  const { lang, t } = useI18n();
   const { palette: p } = useTheme();
   const styles = useStyles(makeStyles);
+  const [copied, setCopied] = useState(false);
   const x = useSharedValue(0);
   const y = useSharedValue(0);
   const scale = useSharedValue(1);
@@ -68,15 +84,13 @@ export const QuestionCard = forwardRef<QuestionCardHandle, Props>(function Quest
 
   useImperativeHandle(ref, () => ({ fly }), [fly]);
 
-  // Deal the next card in: it rises from below at 96%, as in the canvas's
-  // "in" phase. Runs before paint so the incoming card is never drawn at the
-  // outgoing card's off-screen position.
   useLayoutEffect(() => {
     x.value = 0;
-    y.value = 26;
-    scale.value = 0.96;
+    y.value = 22;
+    scale.value = 0.97;
     opacity.value = 1;
     settling.value = false;
+    setCopied(false);
     y.value = withTiming(0, { duration: ENTER_MS });
     scale.value = withTiming(1, { duration: ENTER_MS });
   }, [cardIndex, x, y, scale, opacity, settling]);
@@ -106,9 +120,19 @@ export const QuestionCard = forwardRef<QuestionCardHandle, Props>(function Quest
     ],
   }));
 
+  const handleShare = async () => {
+    tapLight();
+    const res = await shareQuestion(question, relLabel);
+    if (res === 'copied') {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    }
+  };
+
+  const numStr = `#${String(cardIndex + 1).padStart(2, '0')}${totalCards ? ` / ${totalCards}` : ''}`;
+
   return (
     <View style={styles.stack}>
-      {/* Two resting cards peeking out from under the live one. */}
       <View style={styles.under2} />
       <View style={styles.under1} />
 
@@ -118,36 +142,101 @@ export const QuestionCard = forwardRef<QuestionCardHandle, Props>(function Quest
           accessibilityRole="text"
           accessibilityLabel={`${relLabel}, ${bandLabel}. ${question}`}
         >
-          <View style={styles.cardTop}>
-            <View style={styles.relRow}>
-              <View style={[styles.dot, { backgroundColor: relHue }]} />
-              <Text style={styles.relLabel}>{relLabel}</Text>
+          <View style={[styles.topAccentBar, { backgroundColor: relHue }]} />
+
+          <View style={styles.cardInner}>
+            <View style={styles.cardTop}>
+              <View style={styles.relPill}>
+                {relImage ? (
+                  <Image source={relImage} style={styles.relThumb} resizeMode="cover" />
+                ) : (
+                  <View style={[styles.dot, { backgroundColor: relHue }]} />
+                )}
+                <Text style={styles.relLabel}>{relLabel}</Text>
+              </View>
+              <View style={styles.topRightRow}>
+                <View style={styles.bandPill}>
+                  <Text style={styles.bandLabel}>{bandLabel}</Text>
+                </View>
+                <Text style={styles.cardNum}>{numStr}</Text>
+              </View>
             </View>
-            <Text style={styles.bandLabel}>{bandLabel}</Text>
-          </View>
 
-          <Text style={styles.question}>{question}</Text>
+            <View style={styles.questionWrap}>
+              <Text style={styles.question}>{question}</Text>
+              <Text style={styles.watermark}>AZOLLA · DEEPTALK</Text>
+            </View>
 
-          <View style={styles.cardBottom}>
-            <Text style={styles.hint}>{hint}</Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={saved ? t.unkeepQuestionA11y : t.keepQuestionA11y}
-              accessibilityState={{ selected: saved }}
-              hitSlop={10}
-              onPress={() => {
-                tapLight();
-                onToggleSave();
-              }}
-              style={[
-                styles.star,
-                { backgroundColor: saved ? relHue : 'rgba(18,39,26,.08)' },
-              ]}
-            >
-              <Text style={[styles.starGlyph, { color: saved ? p.color.cardInk : 'rgba(18,39,26,.45)' }]}>
-                ★
+            <View style={styles.cardBottom}>
+              <Text style={styles.hint} numberOfLines={1}>
+                {hint}
               </Text>
-            </Pressable>
+              <View style={styles.cardActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={lang === 'th' ? 'แชร์คำถามนี้' : 'Share this question'}
+                  hitSlop={8}
+                  onPress={handleShare}
+                  style={({ pressed }) => [
+                    styles.shareBtn,
+                    pressed && { backgroundColor: p.surface.s10 },
+                  ]}
+                >
+                  <Icon
+                    name={copied ? 'check' : 'share'}
+                    size={13}
+                    color={copied ? p.color.accent : p.ink.a70}
+                  />
+                  <Text
+                    style={[
+                      styles.starGlyph,
+                      { color: copied ? p.color.accent : p.ink.a70 },
+                    ]}
+                  >
+                    {copied
+                      ? lang === 'th'
+                        ? 'คัดลอกแล้ว'
+                        : 'Copied'
+                      : lang === 'th'
+                        ? 'แชร์'
+                        : 'Share'}
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={saved ? t.unkeepQuestionA11y : t.keepQuestionA11y}
+                  accessibilityState={{ selected: saved }}
+                  hitSlop={10}
+                  onPress={() => {
+                    tapLight();
+                    onToggleSave();
+                  }}
+                  style={[
+                    styles.starBtn,
+                    {
+                      backgroundColor: saved ? relHue : p.surface.s06,
+                      borderColor: saved ? relHue : p.surface.borderStrong,
+                    },
+                  ]}
+                >
+                  <Icon
+                    name={saved ? 'bookmark-filled' : 'bookmark'}
+                    size={13}
+                    color={saved ? '#ffffff' : p.ink.a70}
+                    bgColor={saved ? relHue : p.color.card}
+                  />
+                  <Text
+                    style={[
+                      styles.starGlyph,
+                      { color: saved ? '#ffffff' : p.ink.a70 },
+                    ]}
+                  >
+                    {saved ? t.keptBtn : t.keepBtn}
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
           </View>
         </Animated.View>
       </GestureDetector>
@@ -165,57 +254,163 @@ const makeStyles = (t: Typo, p: Palette) =>
     stack: { flex: 1 },
     under2: {
       ...underShared,
-      left: 14,
-      right: 14,
+      left: 16,
+      right: 16,
       top: 16,
-      bottom: -6,
-      backgroundColor: p.surface.s05,
+      bottom: -8,
+      backgroundColor: p.surface.s06,
+      borderWidth: 1,
+      borderColor: p.surface.border,
     },
     under1: {
       ...underShared,
-      left: 7,
-      right: 7,
+      left: 8,
+      right: 8,
       top: 8,
-      bottom: -3,
+      bottom: -4,
       backgroundColor: p.surface.s08,
+      borderWidth: 1,
+      borderColor: p.surface.border,
     },
     card: {
       flex: 1,
       borderRadius: radius.card,
       backgroundColor: p.color.card,
-      paddingVertical: 26,
-      paddingHorizontal: 24,
-      justifyContent: 'space-between',
+      borderWidth: 1,
+      borderColor: p.surface.borderStrong,
+      overflow: 'hidden',
       shadowColor: '#000',
-      shadowOpacity: 0.45,
-      shadowRadius: 30,
-      shadowOffset: { width: 0, height: 24 },
-      elevation: 12,
+      shadowOpacity: 0.12,
+      shadowRadius: 24,
+      shadowOffset: { width: 0, height: 10 },
+      elevation: 8,
     },
-    cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    relRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+    topAccentBar: {
+      height: 6,
+      width: '100%',
+    },
+    cardInner: {
+      flex: 1,
+      paddingVertical: 22,
+      paddingHorizontal: 22,
+      justifyContent: 'space-between',
+    },
+    cardTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+    },
+    topRightRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    cardNum: {
+      fontFamily: t.font.sansBold,
+      fontWeight: '700',
+      fontSize: 11,
+      color: p.ink.a40,
+    },
+    relPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 7,
+      paddingVertical: 4,
+      paddingLeft: 5,
+      paddingRight: 11,
+      borderRadius: radius.pill,
+      backgroundColor: p.surface.s06,
+    },
+    relThumb: {
+      width: 22,
+      height: 22,
+      borderRadius: 99,
+    },
     dot: { width: 8, height: 8, borderRadius: 99 },
     relLabel: {
       fontFamily: t.font.sansBold,
-      fontSize: 10,
-      letterSpacing: 1.6,
-      color: 'rgba(18,39,26,.55)',
+      fontWeight: '700',
+      fontSize: 11,
+      color: p.ink.a75,
+    },
+    bandPill: {
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      borderRadius: radius.pill,
+      backgroundColor: p.surface.s05,
     },
     bandLabel: {
-      fontFamily: t.font.sansBold,
-      fontSize: 10,
-      letterSpacing: 1.6,
-      color: 'rgba(18,39,26,.35)',
+      fontFamily: t.font.sansMedium,
+      fontWeight: '600',
+      fontSize: 11,
+      color: p.ink.a55,
+    },
+    questionWrap: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingVertical: 16,
+      gap: 18,
     },
     question: {
       fontFamily: t.font.serif,
-      fontSize: 34,
-      lineHeight: t.line(34, 38),
+      fontWeight: '700',
+      fontSize: 25,
+      lineHeight: t.line(25, 34),
       color: p.color.cardInk,
-      paddingVertical: 14,
     },
-    cardBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    hint: { fontFamily: t.font.sans, fontSize: 11.5, color: 'rgba(18,39,26,.4)', flexShrink: 1 },
-    star: { width: 36, height: 36, borderRadius: 99, alignItems: 'center', justifyContent: 'center' },
-    starGlyph: { fontSize: 16, lineHeight: 20 },
+    watermark: {
+      fontFamily: t.font.sansBold,
+      fontWeight: '700',
+      fontSize: 10,
+      letterSpacing: 1.8,
+      color: p.ink.a35,
+    },
+    cardBottom: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: p.surface.border,
+    },
+    hint: {
+      fontFamily: t.font.sans,
+      fontSize: 11.5,
+      color: p.ink.a50,
+      flex: 1,
+    },
+    cardActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 7,
+    },
+    shareBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingVertical: 8,
+      paddingHorizontal: 11,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: p.surface.borderStrong,
+      backgroundColor: p.surface.s06,
+      justifyContent: 'center',
+    },
+    starBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 8,
+      paddingHorizontal: 13,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      justifyContent: 'center',
+    },
+    starGlyph: {
+      fontFamily: t.font.sansMedium,
+      fontWeight: '600',
+      fontSize: 12,
+    },
   });

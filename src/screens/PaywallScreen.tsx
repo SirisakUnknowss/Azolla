@@ -1,8 +1,11 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { PurchasesPackage } from 'react-native-purchases';
 
+import { Icon } from '../components/Icon';
+import { BRAND_LOGO } from '../data/decks';
 import { useI18n } from '../i18n';
 import { STORE_AVAILABLE, useSubscription } from '../subscription';
 import { useTheme } from '../theme';
@@ -15,23 +18,26 @@ function isYearly(pkg: PurchasesPackage): boolean {
   return String(pkg.packageType).toUpperCase() === 'ANNUAL';
 }
 
+const PRIVACY_URL = 'https://sirisakunknowss.github.io/DeepTalk/privacy.html';
+const TERMS_URL = 'https://sirisakunknowss.github.io/DeepTalk/terms.html';
+
 export function PaywallScreen({ onClose }: { onClose: () => void }) {
   const insets = useSafeAreaInsets();
-  const { t } = useI18n();
+  const { lang, t } = useI18n();
   const { palette: p } = useTheme();
   const styles = useStyles(makeStyles);
-  const { packages, purchase, restore, isPro } = useSubscription();
-  const [selected, setSelected] = useState<string | null>(null);
+  const { packages, purchase, restore, unlockPreview, isPro } = useSubscription();
+  const [selected, setSelected] = useState<string>('yearly');
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   // Default to the yearly plan when the offering has one, which is both the
   // better deal and the one most people mean to pick.
   useEffect(() => {
-    if (selected || packages.length === 0) return;
+    if (packages.length === 0) return;
     const preferred = packages.find(isYearly) ?? packages[0];
     setSelected(preferred.identifier);
-  }, [packages, selected]);
+  }, [packages]);
 
   // Nothing left to sell once the entitlement is active.
   useEffect(() => {
@@ -39,6 +45,12 @@ export function PaywallScreen({ onClose }: { onClose: () => void }) {
   }, [isPro, onClose]);
 
   const buy = async () => {
+    if (!STORE_AVAILABLE) {
+      tapMedium();
+      unlockPreview();
+      onClose();
+      return;
+    }
     const pkg = packages.find((x) => x.identifier === selected);
     if (!pkg || busy) return;
     tapMedium();
@@ -51,6 +63,11 @@ export function PaywallScreen({ onClose }: { onClose: () => void }) {
   const doRestore = async () => {
     if (busy) return;
     tapLight();
+    if (!STORE_AVAILABLE) {
+      unlockPreview();
+      setNotice(t.proRestored);
+      return;
+    }
     setBusy(true);
     const ok = await restore();
     setBusy(false);
@@ -64,17 +81,35 @@ export function PaywallScreen({ onClose }: { onClose: () => void }) {
     t.proFeatureCustom,
   ];
 
+  const previewPlans = [
+    {
+      id: 'yearly',
+      yearly: true,
+      price: lang === 'th' ? '฿590 / ปี' : '$19.99 / yr',
+      sub: lang === 'th' ? 'เฉลี่ยเพียง ฿49 / เดือน' : 'Just $1.66 / month',
+    },
+    {
+      id: 'monthly',
+      yearly: false,
+      price: lang === 'th' ? '฿99 / เดือน' : '$2.99 / mo',
+      sub: lang === 'th' ? 'ยกเลิกได้ทุกเมื่อ' : 'Cancel anytime',
+    },
+  ];
+
   return (
     <View style={styles.root}>
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + 18, paddingBottom: insets.bottom + 28 },
+          { paddingTop: insets.top + 18, paddingBottom: insets.bottom + 32 },
         ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>{t.proName}</Text>
+          <View style={styles.proBadge}>
+            <Icon name="sparkle" size={13} color={p.color.accent} />
+            <Text style={styles.eyebrow}>{t.proName}</Text>
+          </View>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t.proCloseA11y}
@@ -85,29 +120,39 @@ export function PaywallScreen({ onClose }: { onClose: () => void }) {
             }}
             style={styles.closeBtn}
           >
-            <Text style={styles.closeGlyph}>×</Text>
+            <Icon name="close" size={16} color={p.ink.a70} />
           </Pressable>
         </View>
 
-        <Text style={styles.title}>{t.proTitle}</Text>
-        <Text style={styles.subtitle}>{t.proSubtitle}</Text>
-
-        <View style={styles.features}>
-          {features.map((line) => (
-            <View key={line} style={styles.featureRow}>
-              <View style={styles.featureDot} />
-              <Text style={styles.featureText}>{line}</Text>
+        <LinearGradient
+          colors={[p.accentAlpha.a16, p.accentAlpha.a04]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroCard}
+        >
+          <View style={styles.heroTop}>
+            <Image source={BRAND_LOGO} style={styles.heroLogo} resizeMode="cover" />
+            <View style={styles.heroTextWrap}>
+              <Text style={styles.title}>{t.proTitle}</Text>
+              <Text style={styles.subtitle}>{t.proSubtitle}</Text>
             </View>
-          ))}
-        </View>
-
-        {!STORE_AVAILABLE ? (
-          <View style={styles.unavailable}>
-            <Text style={styles.unavailableText}>{t.proUnavailable}</Text>
           </View>
-        ) : packages.length === 0 ? (
+
+          <View style={styles.features}>
+            {features.map((line) => (
+              <View key={line} style={styles.featureRow}>
+                <View style={styles.featureCheck}>
+                  <Icon name="check" size={12} color={p.color.onAccent} />
+                </View>
+                <Text style={styles.featureText}>{line}</Text>
+              </View>
+            ))}
+          </View>
+        </LinearGradient>
+
+        {STORE_AVAILABLE && packages.length === 0 ? (
           <Text style={styles.loading}>{t.proLoading}</Text>
-        ) : (
+        ) : STORE_AVAILABLE ? (
           <View style={styles.plans}>
             {packages.map((pkg) => {
               const on = pkg.identifier === selected;
@@ -125,18 +170,66 @@ export function PaywallScreen({ onClose }: { onClose: () => void }) {
                   style={[
                     styles.plan,
                     {
-                      borderColor: on ? p.color.accent : p.surface.border,
+                      borderColor: on ? p.color.accent : p.surface.borderStrong,
                       backgroundColor: on ? p.accentAlpha.a12 : p.surface.s045,
                     },
                   ]}
                 >
-                  <View style={styles.planText}>
-                    <Text style={styles.planName}>
-                      {yearly ? t.proYearly : t.proMonthly}
-                    </Text>
-                    {yearly && <Text style={styles.planNote}>{t.proYearlyNote}</Text>}
+                  <View style={styles.planLeft}>
+                    <View style={[styles.radio, { borderColor: on ? p.color.accent : p.surface.ring }]}>
+                      {on && <View style={styles.radioDot} />}
+                    </View>
+                    <View>
+                      <View style={styles.planText}>
+                        <Text style={styles.planName}>
+                          {yearly ? t.proYearly : t.proMonthly}
+                        </Text>
+                        {yearly && <Text style={styles.planNote}>{t.proYearlyNote}</Text>}
+                      </View>
+                    </View>
                   </View>
                   <Text style={styles.planPrice}>{pkg.product.priceString}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : (
+          <View style={styles.plans}>
+            {previewPlans.map((plan) => {
+              const on = plan.id === selected;
+              return (
+                <Pressable
+                  key={plan.id}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: on }}
+                  accessibilityLabel={`${plan.yearly ? t.proYearly : t.proMonthly} ${plan.price}`}
+                  onPress={() => {
+                    tapLight();
+                    setSelected(plan.id);
+                  }}
+                  style={[
+                    styles.plan,
+                    {
+                      borderColor: on ? p.color.accent : p.surface.borderStrong,
+                      backgroundColor: on ? p.accentAlpha.a12 : p.surface.s045,
+                    },
+                  ]}
+                >
+                  <View style={styles.planLeft}>
+                    <View style={[styles.radio, { borderColor: on ? p.color.accent : p.surface.ring }]}>
+                      {on && <View style={styles.radioDot} />}
+                    </View>
+                    <View>
+                      <View style={styles.planText}>
+                        <Text style={styles.planName}>
+                          {plan.yearly ? t.proYearly : t.proMonthly}
+                        </Text>
+                        {plan.yearly && <Text style={styles.planNote}>{t.proYearlyNote}</Text>}
+                      </View>
+                      <Text style={styles.planSub}>{plan.sub}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.planPrice}>{plan.price}</Text>
                 </Pressable>
               );
             })}
@@ -145,33 +238,29 @@ export function PaywallScreen({ onClose }: { onClose: () => void }) {
 
         {notice && <Text style={styles.notice}>{notice}</Text>}
 
-        {STORE_AVAILABLE && packages.length > 0 && (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t.proCta}
-            onPress={buy}
-            disabled={busy}
-            style={({ pressed }) => [
-              styles.cta,
-              pressed && styles.ctaPressed,
-              busy && styles.ctaBusy,
-            ]}
-          >
-            <Text style={styles.ctaText}>{t.proCta}</Text>
-          </Pressable>
-        )}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t.proCta}
+          onPress={buy}
+          disabled={busy}
+          style={({ pressed }) => [
+            styles.cta,
+            pressed && styles.ctaPressed,
+            busy && styles.ctaBusy,
+          ]}
+        >
+          <Text style={styles.ctaText}>{t.proCta}</Text>
+        </Pressable>
 
         <View style={styles.footerActions}>
-          {STORE_AVAILABLE && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t.proRestore}
-              onPress={doRestore}
-              disabled={busy}
-            >
-              <Text style={styles.footerLink}>{t.proRestore}</Text>
-            </Pressable>
-          )}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t.proRestore}
+            onPress={doRestore}
+            disabled={busy}
+          >
+            <Text style={styles.footerLink}>{t.proRestore}</Text>
+          </Pressable>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t.proCloseA11y}
@@ -181,6 +270,28 @@ export function PaywallScreen({ onClose }: { onClose: () => void }) {
             }}
           >
             <Text style={styles.footerLink}>{t.proClose}</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={t.privacyPolicyA11y}
+            onPress={() => {
+              tapLight();
+              Linking.openURL(PRIVACY_URL);
+            }}
+          >
+            <Text style={styles.footerLink}>{t.privacyPolicy}</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={lang === 'th' ? 'ข้อกำหนดการใช้งาน' : 'Terms of Use'}
+            onPress={() => {
+              tapLight();
+              Linking.openURL(TERMS_URL);
+            }}
+          >
+            <Text style={styles.footerLink}>
+              {lang === 'th' ? 'ข้อกำหนดการใช้งาน' : 'Terms of Use'}
+            </Text>
           </Pressable>
         </View>
 
@@ -198,47 +309,87 @@ const makeStyles = (t: Typo, p: Palette) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 26,
+      marginBottom: 18,
     },
-    eyebrow: { ...t.eyebrow, color: p.color.accent },
+    proBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 5,
+      paddingHorizontal: 11,
+      borderRadius: radius.pill,
+      backgroundColor: p.accentAlpha.a16,
+      borderWidth: 1,
+      borderColor: p.accentAlpha.a28,
+    },
+    eyebrow: {
+      fontFamily: t.font.sansBold,
+      fontWeight: '700',
+      fontSize: 11.5,
+      color: p.color.accentSoft,
+      letterSpacing: 0.4,
+    },
     closeBtn: {
-      width: 34,
-      height: 34,
+      width: 36,
+      height: 36,
       borderRadius: 99,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: p.surface.s07,
+      borderWidth: 1,
+      borderColor: p.surface.border,
     },
-    closeGlyph: { fontFamily: t.font.sans, fontSize: 20, color: p.ink.a70, lineHeight: 24 },
+    heroCard: {
+      padding: 20,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: p.accentAlpha.a28,
+      marginBottom: 22,
+    },
+    heroTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
+      marginBottom: 18,
+    },
+    heroLogo: {
+      width: 52,
+      height: 52,
+      borderRadius: 16,
+      backgroundColor: p.accentAlpha.a16,
+    },
+    heroTextWrap: { flex: 1 },
     title: {
       fontFamily: t.font.serif,
-      fontSize: 36,
-      lineHeight: t.line(36, 39),
+      fontWeight: '700',
+      fontSize: 24,
+      lineHeight: t.line(24, 30),
       color: p.color.ink,
-      marginBottom: 10,
+      marginBottom: 4,
     },
     subtitle: {
       fontFamily: t.font.sans,
-      fontSize: 14,
-      lineHeight: t.line(14, 21),
-      color: p.ink.a55,
-      marginBottom: 28,
+      fontSize: 13,
+      lineHeight: t.line(13, 18),
+      color: p.ink.a60,
     },
-    features: { gap: 13, marginBottom: 30 },
-    featureRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 11 },
-    featureDot: {
-      width: 6,
-      height: 6,
+    features: { gap: 11 },
+    featureRow: { flexDirection: 'row', alignItems: 'center', gap: 11 },
+    featureCheck: {
+      width: 22,
+      height: 22,
       borderRadius: 99,
       backgroundColor: p.color.accent,
-      marginTop: 7,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     featureText: {
       flex: 1,
-      fontFamily: t.font.sans,
-      fontSize: 14,
-      lineHeight: t.line(14, 20),
-      color: p.ink.a75,
+      fontFamily: t.font.sansMedium,
+      fontWeight: '500',
+      fontSize: 13.5,
+      lineHeight: t.line(13.5, 19),
+      color: p.color.ink,
     },
     plans: { gap: 10, marginBottom: 20 },
     plan: {
@@ -246,41 +397,46 @@ const makeStyles = (t: Typo, p: Palette) =>
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: 12,
-      paddingVertical: 16,
-      paddingHorizontal: 18,
-      borderRadius: radius.lg,
-      borderWidth: 1,
+      paddingVertical: 15,
+      paddingHorizontal: 16,
+      borderRadius: radius.xl,
+      borderWidth: 1.5,
     },
-    planText: { flexDirection: 'row', alignItems: 'center', gap: 9 },
-    planName: { fontFamily: t.font.sansMedium, fontSize: 15.5, color: p.color.ink },
+    planLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      flex: 1,
+    },
+    radio: {
+      width: 20,
+      height: 20,
+      borderRadius: 99,
+      borderWidth: 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    radioDot: { width: 10, height: 10, borderRadius: 99, backgroundColor: p.color.accent },
+    planText: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    planName: { fontFamily: t.font.sansMedium, fontWeight: '700', fontSize: 15.5, color: p.color.ink },
+    planSub: {
+      fontFamily: t.font.sans,
+      fontSize: 11.5,
+      color: p.ink.a55,
+      marginTop: 2,
+    },
     planNote: {
       fontFamily: t.font.sansBold,
-      fontSize: 9.5,
-      letterSpacing: 0.8,
+      fontWeight: '700',
+      fontSize: 10,
       color: p.color.onAccent,
       backgroundColor: p.color.accent,
-      paddingVertical: 3,
-      paddingHorizontal: 7,
+      paddingVertical: 2,
+      paddingHorizontal: 8,
       borderRadius: radius.pill,
       overflow: 'hidden',
     },
-    planPrice: { fontFamily: t.font.sansMedium, fontSize: 15.5, color: p.color.ink },
-    unavailable: {
-      paddingVertical: 22,
-      paddingHorizontal: 18,
-      borderRadius: radius.lg,
-      borderWidth: 1,
-      borderStyle: 'dashed',
-      borderColor: p.surface.dashed,
-      marginBottom: 20,
-    },
-    unavailableText: {
-      fontFamily: t.font.sans,
-      fontSize: 13.5,
-      lineHeight: t.line(13.5, 20),
-      color: p.ink.a55,
-      textAlign: 'center',
-    },
+    planPrice: { fontFamily: t.font.sansBold, fontWeight: '700', fontSize: 15.5, color: p.color.ink },
     loading: {
       fontFamily: t.font.sans,
       fontSize: 13.5,
@@ -297,27 +453,33 @@ const makeStyles = (t: Typo, p: Palette) =>
       marginBottom: 14,
     },
     cta: {
-      paddingVertical: 17,
+      paddingVertical: 16,
       borderRadius: radius.lg,
       backgroundColor: p.color.accent,
       alignItems: 'center',
-      marginBottom: 18,
+      marginBottom: 16,
+      shadowColor: '#000',
+      shadowOpacity: 0.16,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 4,
     },
     ctaPressed: { backgroundColor: p.color.accentHover },
     ctaBusy: { opacity: 0.6 },
-    ctaText: { fontFamily: t.font.sansMedium, fontSize: 16, color: p.color.onAccent },
+    ctaText: { fontFamily: t.font.sansMedium, fontWeight: '700', fontSize: 16, color: p.color.onAccent },
     footerActions: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       justifyContent: 'center',
-      gap: 22,
-      marginBottom: 22,
+      gap: 18,
+      marginBottom: 20,
     },
-    footerLink: { fontFamily: t.font.sansMedium, fontSize: 13, color: p.ink.a55 },
+    footerLink: { fontFamily: t.font.sansMedium, fontWeight: '600', fontSize: 13, color: p.ink.a55 },
     terms: {
       fontFamily: t.font.sans,
-      fontSize: 10.5,
-      lineHeight: t.line(10.5, 15),
-      color: p.ink.a35,
+      fontSize: 11,
+      lineHeight: t.line(11, 16),
+      color: p.ink.a40,
       textAlign: 'center',
     },
   });

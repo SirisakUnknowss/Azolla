@@ -18,6 +18,8 @@ export const EN: Content = {
     Family: 'Family',
     Colleague: 'Colleague',
     Stranger: 'Stranger',
+    'Dark mode': 'Deep Dark',
+    'Sex mode': 'Sex Mode (18+)',
   },
 
   blurb: {
@@ -28,6 +30,8 @@ export const EN: Content = {
     Family: 'The unspoken stuff',
     Colleague: 'Past the standup small talk',
     Stranger: 'Nothing to lose',
+    'Dark mode': 'Shadow self, secret desires & untold truths',
+    'Sex mode': 'Attraction, fantasies, turn-ons & 18+ intimacy',
   },
 
   modes: {
@@ -37,6 +41,44 @@ export const EN: Content = {
   },
 
   packs: {
+    dark: {
+      name: 'Deep Dark: Forbidden Desires',
+      blurb: 'The shadow side of the mind, hidden cravings, and secrets never told to anyone',
+      tag: 'Dark',
+      questions: [
+        'What is a secret desire you have never told a single soul because you fear being judged?',
+        'What is the biggest lie about your personality that you let everyone around you believe?',
+        'If you had one night with zero consequences and total anonymity, what would you actually do?',
+        'What is a forbidden attraction or fantasy you have kept locked inside your head?',
+        'When have you subtly manipulated someone to get exactly what you wanted?',
+        'Whose downfall would secretly satisfy a dark part of you?',
+        'What is the most selfish or ruthless thing you have ever done to someone who trusted you?',
+        'What temptation are you resisting right now only because you are afraid of getting caught?',
+        'Which part of your dark side do you secretly love and refuse to let go of?',
+        'What is a craving — emotional or physical — that you are ashamed of how intensely you want?',
+        'If everyone in this room could read your unfiltered thoughts for one hour, who would leave first?',
+        'What secret are you planning to take to your grave — give the closest hint you dare to speak?',
+      ],
+    },
+    sex: {
+      name: 'Sex Mode: Spicy & Unfiltered (18+)',
+      blurb: 'Turn-ons, bedroom secrets, roleplay, and fantasies you want to try tonight',
+      tag: '18+ Hot',
+      questions: [
+        'What is a sexual fantasy you have had for years but have never acted on yet?',
+        'Do you prefer being the one in control in bed, or letting the other person take over completely?',
+        'What is the dirtiest phrase someone could whisper in your ear right now to turn you on?',
+        'Where on your body do you want to be kissed, touched, or bitten right this second?',
+        'How do you feel about being blindfolded, pinned down, or having your hands tied in bed?',
+        'What is one thing in bed that instantly takes you from "this is nice" to "I am losing my mind"?',
+        'If we were alone in a hotel room tonight with zero rules, what is the first thing you would do to me?',
+        'What roleplay scenario, power dynamic, or secret kink turns you on the most?',
+        'Describe step by step how you would seduce and undress me if this card game ended right now.',
+        'What is the riskiest or most unexpected place you have ever hooked up — or want to?',
+        'On a scale of 1 to 10, how turned on are you right now, and what would make it a 10?',
+        'No filter: what is the exact fantasy you want to try with the person across from you tonight?',
+      ],
+    },
     first: {
       name: 'First night out',
       blurb: 'For people who just met and want to skip the weather',

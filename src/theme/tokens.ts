@@ -1,13 +1,15 @@
+import { Platform } from 'react-native';
+
 import type { Lang } from '../i18n/lang';
 
-/** Light or dark chrome — independent of language, switched from Packs → Session. */
+/** Light or dark chrome — independent of language, switched from Header or Packs → App. */
 export type ThemeMode = 'light' | 'dark';
-export const THEME_MODES: readonly ThemeMode[] = ['dark', 'light'];
+export const THEME_MODES: readonly ThemeMode[] = ['light', 'dark'];
 
 type ColorTokens = {
   /** App canvas behind the screens. */
   bg: string;
-  /** Radial backdrop used behind the device in the canvas. */
+  /** Outer backdrop behind the phone container on wide screens. */
   bgDeep: string;
   /** `bg`, alpha 0 — the fade-in edge of a scrim gradient over the canvas. */
   bgFade: string;
@@ -19,8 +21,7 @@ type ColorTokens = {
   accentSoft: string;
   /** Text colour that sits on top of the accent. */
   onAccent: string;
-  /** Card face — the question card flips the palette. Same in both themes:
-   *  the card is paper, not chrome. */
+  /** Question card face. */
   card: string;
   cardInk: string;
   /** Tab bar shell. */
@@ -79,128 +80,119 @@ export type Palette = {
   accentAlpha: AccentAlphaTokens;
 };
 
-/**
- * Colour identity sampled from the app icon (assets/icon.png) — a two-tone
- * sprouting leaf mark. Dark keeps the icon's bright mint as an accent on a
- * near-black canvas; light flips to a soft mint canvas, with the leaf's
- * darker green doing the work of legible text and accent fills. `surface`
- * and `ink` invert the same way: white-alpha lightens the dark canvas,
- * dark-alpha dims the light one, at matching alpha steps so a given step
- * reads as the same "amount of emphasis" in either theme.
- */
 const DARK: Palette = {
   color: {
-    bg: '#0a0e0b',
-    bgDeep: '#050705',
-    bgFade: 'rgba(10,14,11,0)',
-    ink: '#f6efe4',
-    accent: '#8fd39a',
-    accentHover: '#a6dfb1',
-    accentSoft: '#bfe6c7',
-    onAccent: '#12271a',
-    card: '#f6efe4',
-    cardInk: '#12271a',
-    tabShell: 'rgba(10,14,11,.86)',
-    danger: '#ff9db1',
+    bg: '#0c110e',
+    bgDeep: '#060807',
+    bgFade: 'rgba(12,17,14,0)',
+    ink: '#f4f6f3',
+    accent: '#5cd67d',
+    accentHover: '#4bc46c',
+    accentSoft: '#9be7af',
+    onAccent: '#0b2212',
+    card: '#162019',
+    cardInk: '#f4f6f3',
+    tabShell: 'rgba(18,25,20,.92)',
+    danger: '#ff7b93',
   },
   ink: {
-    a75: 'rgba(246,239,228,.75)',
-    a72: 'rgba(246,239,228,.72)',
-    a70: 'rgba(246,239,228,.7)',
-    a60: 'rgba(246,239,228,.6)',
-    a55: 'rgba(246,239,228,.55)',
-    a50: 'rgba(246,239,228,.5)',
-    a48: 'rgba(246,239,228,.48)',
-    a45: 'rgba(246,239,228,.45)',
-    a42: 'rgba(246,239,228,.42)',
-    a40: 'rgba(246,239,228,.4)',
-    a35: 'rgba(246,239,228,.35)',
+    a75: 'rgba(244,246,243,.85)',
+    a72: 'rgba(244,246,243,.80)',
+    a70: 'rgba(244,246,243,.76)',
+    a60: 'rgba(244,246,243,.68)',
+    a55: 'rgba(244,246,243,.64)',
+    a50: 'rgba(244,246,243,.60)',
+    a48: 'rgba(244,246,243,.58)',
+    a45: 'rgba(244,246,243,.55)',
+    a42: 'rgba(244,246,243,.50)',
+    a40: 'rgba(244,246,243,.46)',
+    a35: 'rgba(244,246,243,.40)',
   },
   surface: {
-    s03: 'rgba(255,255,255,.03)',
-    s04: 'rgba(255,255,255,.04)',
-    s045: 'rgba(255,255,255,.045)',
+    s03: '#131b15',
+    s04: '#151e18',
+    s045: '#162019',
     s05: 'rgba(255,255,255,.05)',
-    s06: 'rgba(255,255,255,.06)',
-    s07: 'rgba(255,255,255,.07)',
-    s08: 'rgba(255,255,255,.08)',
-    s09: 'rgba(255,255,255,.09)',
-    s10: 'rgba(255,255,255,.1)',
-    s11: 'rgba(255,255,255,.11)',
-    border: 'rgba(255,255,255,.08)',
-    borderSoft: 'rgba(255,255,255,.09)',
-    borderStrong: 'rgba(255,255,255,.12)',
-    dashed: 'rgba(255,255,255,.14)',
-    dashedStrong: 'rgba(255,255,255,.16)',
-    ring: 'rgba(255,255,255,.28)',
+    s06: 'rgba(255,255,255,.07)',
+    s07: 'rgba(255,255,255,.09)',
+    s08: 'rgba(255,255,255,.10)',
+    s09: 'rgba(92,214,125,.12)',
+    s10: 'rgba(255,255,255,.12)',
+    s11: 'rgba(255,255,255,.15)',
+    border: 'rgba(255,255,255,.09)',
+    borderSoft: 'rgba(255,255,255,.11)',
+    borderStrong: 'rgba(255,255,255,.16)',
+    dashed: 'rgba(255,255,255,.18)',
+    dashedStrong: 'rgba(255,255,255,.22)',
+    ring: 'rgba(255,255,255,.32)',
   },
   accentAlpha: {
-    a04: 'rgba(143,211,154,.04)',
-    a12: 'rgba(143,211,154,.12)',
-    a16: 'rgba(143,211,154,.16)',
-    a22: 'rgba(143,211,154,.22)',
-    a28: 'rgba(143,211,154,.28)',
-    a45: 'rgba(143,211,154,.45)',
-    a50: 'rgba(143,211,154,.5)',
-    a85: 'rgba(143,211,154,.85)',
+    a04: 'rgba(92,214,125,.05)',
+    a12: 'rgba(92,214,125,.14)',
+    a16: 'rgba(92,214,125,.18)',
+    a22: 'rgba(92,214,125,.24)',
+    a28: 'rgba(92,214,125,.32)',
+    a45: 'rgba(92,214,125,.48)',
+    a50: 'rgba(92,214,125,.55)',
+    a85: 'rgba(92,214,125,.90)',
   },
 };
 
 const LIGHT: Palette = {
   color: {
-    bg: '#f4f7f0',
-    bgDeep: '#e8f0e2',
-    bgFade: 'rgba(244,247,240,0)',
-    ink: '#152a1d',
-    accent: '#237a45',
-    accentHover: '#1b5f37',
-    accentSoft: '#1d6b3e',
+    bg: '#f5f7f4',
+    bgDeep: '#e7ece5',
+    bgFade: 'rgba(245,247,244,0)',
+    ink: '#14261c',
+    accent: '#1f7a44',
+    accentHover: '#186336',
+    accentSoft: '#196638',
     onAccent: '#ffffff',
-    card: '#f6efe4',
-    cardInk: '#12271a',
-    tabShell: 'rgba(244,247,240,.86)',
-    danger: '#d6486b',
+    card: '#ffffff',
+    cardInk: '#14261c',
+    tabShell: 'rgba(255,255,255,.94)',
+    danger: '#d9385a',
   },
   ink: {
-    a75: 'rgba(21,42,29,.75)',
-    a72: 'rgba(21,42,29,.72)',
-    a70: 'rgba(21,42,29,.7)',
-    a60: 'rgba(21,42,29,.6)',
-    a55: 'rgba(21,42,29,.55)',
-    a50: 'rgba(21,42,29,.5)',
-    a48: 'rgba(21,42,29,.48)',
-    a45: 'rgba(21,42,29,.45)',
-    a42: 'rgba(21,42,29,.42)',
-    a40: 'rgba(21,42,29,.4)',
-    a35: 'rgba(21,42,29,.35)',
+    a75: 'rgba(20,38,28,.86)',
+    a72: 'rgba(20,38,28,.82)',
+    a70: 'rgba(20,38,28,.78)',
+    a60: 'rgba(20,38,28,.70)',
+    a55: 'rgba(20,38,28,.66)',
+    a50: 'rgba(20,38,28,.62)',
+    a48: 'rgba(20,38,28,.60)',
+    a45: 'rgba(20,38,28,.58)',
+    a42: 'rgba(20,38,28,.54)',
+    a40: 'rgba(20,38,28,.50)',
+    a35: 'rgba(20,38,28,.42)',
   },
   surface: {
-    s03: 'rgba(21,42,29,.03)',
-    s04: 'rgba(21,42,29,.04)',
-    s045: 'rgba(21,42,29,.045)',
-    s05: 'rgba(21,42,29,.05)',
-    s06: 'rgba(21,42,29,.06)',
-    s07: 'rgba(21,42,29,.07)',
-    s08: 'rgba(21,42,29,.08)',
-    s09: 'rgba(21,42,29,.09)',
-    s10: 'rgba(21,42,29,.1)',
-    s11: 'rgba(21,42,29,.11)',
-    border: 'rgba(21,42,29,.08)',
-    borderSoft: 'rgba(21,42,29,.09)',
-    borderStrong: 'rgba(21,42,29,.12)',
-    dashed: 'rgba(21,42,29,.14)',
-    dashedStrong: 'rgba(21,42,29,.16)',
-    ring: 'rgba(21,42,29,.28)',
+    s03: '#ffffff',
+    s04: '#ffffff',
+    s045: '#ffffff',
+    s05: 'rgba(20,38,28,.04)',
+    s06: 'rgba(20,38,28,.055)',
+    s07: 'rgba(20,38,28,.07)',
+    s08: 'rgba(20,38,28,.085)',
+    s09: '#eaf5ee',
+    s10: 'rgba(20,38,28,.10)',
+    s11: 'rgba(20,38,28,.12)',
+    border: 'rgba(20,38,28,.09)',
+    borderSoft: 'rgba(20,38,28,.10)',
+    borderStrong: 'rgba(20,38,28,.15)',
+    dashed: 'rgba(20,38,28,.18)',
+    dashedStrong: 'rgba(20,38,28,.22)',
+    ring: 'rgba(20,38,28,.28)',
   },
   accentAlpha: {
-    a04: 'rgba(35,122,69,.04)',
-    a12: 'rgba(35,122,69,.12)',
-    a16: 'rgba(35,122,69,.16)',
-    a22: 'rgba(35,122,69,.22)',
-    a28: 'rgba(35,122,69,.28)',
-    a45: 'rgba(35,122,69,.45)',
-    a50: 'rgba(35,122,69,.5)',
-    a85: 'rgba(35,122,69,.85)',
+    a04: 'rgba(31,122,68,.04)',
+    a12: 'rgba(31,122,68,.11)',
+    a16: 'rgba(31,122,68,.15)',
+    a22: 'rgba(31,122,68,.20)',
+    a28: 'rgba(31,122,68,.28)',
+    a45: 'rgba(31,122,68,.45)',
+    a50: 'rgba(31,122,68,.55)',
+    a85: 'rgba(31,122,68,.90)',
   },
 };
 
@@ -215,46 +207,46 @@ export type FontSet = {
   sansBold: string;
 };
 
-/**
- * One face set per language. Instrument Serif and DM Sans carry no Thai
- * glyphs — on Android a custom typeface gets no fallback chain, so Thai set in
- * them renders as empty boxes rather than borrowing the system font. Thai
- * therefore gets its own Noto pair, loaded alongside the Latin one in App.tsx.
- */
-export const FONTS: Record<Lang, FontSet> = {
-  en: {
-    serif: 'InstrumentSerif_400Regular',
-    sans: 'DMSans_400Regular',
-    sansMedium: 'DMSans_500Medium',
-    sansBold: 'DMSans_700Bold',
-  },
-  th: {
-    serif: 'NotoSerifThai_400Regular',
-    sans: 'NotoSansThai_400Regular',
-    sansMedium: 'NotoSansThai_500Medium',
-    sansBold: 'NotoSansThai_700Bold',
-  },
+const SYSTEM_FONT =
+  Platform.select({
+    web: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Thai", Roboto, sans-serif',
+    ios: 'System',
+    default: 'sans-serif',
+  }) ?? 'System';
+
+const SYSTEM_FONT_MEDIUM =
+  Platform.select({
+    web: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Thai", Roboto, sans-serif',
+    ios: 'System',
+    default: 'sans-serif-medium',
+  }) ?? 'System';
+
+const SYSTEM_FONT_SET: FontSet = {
+  serif: SYSTEM_FONT,
+  sans: SYSTEM_FONT,
+  sansMedium: SYSTEM_FONT_MEDIUM,
+  sansBold: SYSTEM_FONT,
 };
 
 /**
- * Everything a stylesheet needs to know about the active language.
- *
- * Screens build their styles through `useStyles(makeStyles)` and receive one of
- * these, so a language switch restyles the app without every `Text` having to
- * carry an override.
+ * System UI typeface across both languages. Native OS fonts on iOS, Android,
+ * and Web include full Latin and Thai glyph coverage out of the box.
  */
+export const FONTS: Record<Lang, FontSet> = {
+  en: SYSTEM_FONT_SET,
+  th: SYSTEM_FONT_SET,
+};
+
 export type Typo = {
   lang: Lang;
   font: FontSet;
-  /**
-   * Line height for a given font size. Thai stacks vowels and tone marks above
-   * and below the baseline, so the canvas's tight Latin leading clips it; take
-   * the roomier of the Latin value and a 1.5 ratio.
-   */
   line: (size: number, latin: number) => number;
-  /** The `letter-spacing:.18em`-style eyebrow used across every screen. */
-  eyebrow: { fontFamily: string; fontSize: number; letterSpacing: number };
-  /** Uppercasing is a Latin device — Thai has no case to change. */
+  eyebrow: {
+    fontFamily: string;
+    fontWeight: '700';
+    fontSize: number;
+    letterSpacing: number;
+  };
   upper: (s: string) => string;
 };
 
@@ -269,12 +261,12 @@ function typoFor(lang: Lang): Typo {
   return {
     lang,
     font,
-    line: (size, latin) => (thai ? Math.max(latin, Math.round(size * 1.5)) : latin),
+    line: (size, latin) => (thai ? Math.max(latin, Math.round(size * 1.48)) : latin),
     eyebrow: {
       fontFamily: font.sansBold,
-      fontSize: 10.5,
-      // Thai clusters break apart when the letters are pushed this far apart.
-      letterSpacing: thai ? 0.5 : 1.89,
+      fontWeight: '700',
+      fontSize: 11,
+      letterSpacing: thai ? 0.3 : 1.1,
     },
     upper: (s) => (thai ? s : s.toUpperCase()),
   };
@@ -285,13 +277,13 @@ export function typo(lang: Lang): Typo {
 }
 
 export const radius = {
-  sm: 14,
+  sm: 12,
   md: 16,
   lg: 18,
   xl: 20,
-  xxl: 22,
+  xxl: 24,
   card: 28,
   pill: 999,
 } as const;
 
-export const screenPad = 22;
+export const screenPad = 20;

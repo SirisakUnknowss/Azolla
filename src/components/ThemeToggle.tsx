@@ -7,10 +7,12 @@ import { radius, THEME_MODES, type Palette, type ThemeMode, type Typo } from '..
 import { useStyles } from '../theme/useStyles';
 import { tapLight } from '../util/haptics';
 
-/** The Dark | Light segmented pill — the theme twin of `LangToggle`. */
+import { Icon } from './Icon';
+
+/** Crisp iOS-style Light | Dark segmented control with SVG sun and crescent moon icons. */
 export function ThemeToggle() {
   const { t } = useI18n();
-  const { mode, setMode } = useTheme();
+  const { mode, setMode, palette: p } = useTheme();
   const styles = useStyles(makeStyles);
   const label: Record<ThemeMode, string> = { dark: t.themeDark, light: t.themeLight };
 
@@ -18,6 +20,7 @@ export function ThemeToggle() {
     <View style={styles.shell}>
       {THEME_MODES.map((id) => {
         const on = id === mode;
+        const iconColor = on ? p.color.accent : p.ink.a48;
         return (
           <Pressable
             key={id}
@@ -32,6 +35,11 @@ export function ThemeToggle() {
             }}
             style={[styles.seg, on && styles.segOn]}
           >
+            <Icon
+              name={id === 'light' ? 'sun' : 'moon'}
+              size={13}
+              color={iconColor}
+            />
             <Text style={[styles.label, on && styles.labelOn]}>{label[id]}</Text>
           </Pressable>
         );
@@ -44,6 +52,7 @@ const makeStyles = (t: Typo, p: Palette) =>
   StyleSheet.create({
     shell: {
       flexDirection: 'row',
+      alignItems: 'center',
       gap: 2,
       padding: 3,
       borderRadius: radius.pill,
@@ -51,8 +60,30 @@ const makeStyles = (t: Typo, p: Palette) =>
       borderWidth: 1,
       borderColor: p.surface.border,
     },
-    seg: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: radius.pill },
-    segOn: { backgroundColor: p.surface.s11 },
-    label: { fontFamily: t.font.sansBold, fontSize: 10.5, letterSpacing: 0.9, color: p.ink.a45 },
-    labelOn: { color: p.color.ink },
+    seg: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      borderRadius: radius.pill,
+    },
+    segOn: {
+      backgroundColor: p.color.card,
+      shadowColor: '#000',
+      shadowOpacity: 0.08,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 1 },
+      elevation: 2,
+    },
+    label: {
+      fontFamily: t.font.sansMedium,
+      fontWeight: '600',
+      fontSize: 11.5,
+      color: p.ink.a50,
+    },
+    labelOn: {
+      color: p.color.ink,
+      fontWeight: '700',
+    },
   });
