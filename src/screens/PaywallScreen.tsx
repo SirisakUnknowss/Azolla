@@ -26,7 +26,7 @@ export function PaywallScreen({ onClose }: { onClose: () => void }) {
   const { lang, t } = useI18n();
   const { palette: p } = useTheme();
   const styles = useStyles(makeStyles);
-  const { packages, purchase, restore, unlockPreview, isPro } = useSubscription();
+  const { packages, purchase, restore, isPro } = useSubscription();
   const [selected, setSelected] = useState<string>('yearly');
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -47,8 +47,7 @@ export function PaywallScreen({ onClose }: { onClose: () => void }) {
   const buy = async () => {
     if (!STORE_AVAILABLE) {
       tapMedium();
-      unlockPreview();
-      onClose();
+      setNotice(t.proUnavailable);
       return;
     }
     const pkg = packages.find((x) => x.identifier === selected);
@@ -64,8 +63,7 @@ export function PaywallScreen({ onClose }: { onClose: () => void }) {
     if (busy) return;
     tapLight();
     if (!STORE_AVAILABLE) {
-      unlockPreview();
-      setNotice(t.proRestored);
+      setNotice(t.proUnavailable);
       return;
     }
     setBusy(true);
@@ -236,7 +234,12 @@ export function PaywallScreen({ onClose }: { onClose: () => void }) {
           </View>
         )}
 
-        {notice && <Text style={styles.notice}>{notice}</Text>}
+        {notice && (
+          <View style={styles.noticeBox}>
+            <Icon name="lock" size={14} color={p.color.accent} />
+            <Text style={styles.notice}>{notice}</Text>
+          </View>
+        )}
 
         <Pressable
           accessibilityRole="button"
@@ -444,13 +447,25 @@ const makeStyles = (t: Typo, p: Palette) =>
       textAlign: 'center',
       marginBottom: 20,
     },
+    noticeBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      borderRadius: radius.md,
+      backgroundColor: p.accentAlpha.a12,
+      borderWidth: 1,
+      borderColor: p.accentAlpha.a28,
+      marginBottom: 16,
+    },
     notice: {
-      fontFamily: t.font.sans,
-      fontSize: 13,
-      lineHeight: t.line(13, 19),
+      flex: 1,
+      fontFamily: t.font.sansMedium,
+      fontWeight: '600',
+      fontSize: 12.5,
+      lineHeight: t.line(12.5, 18),
       color: p.color.accentSoft,
-      textAlign: 'center',
-      marginBottom: 14,
     },
     cta: {
       paddingVertical: 16,
