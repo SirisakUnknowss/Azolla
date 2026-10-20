@@ -109,6 +109,52 @@ export function PacksScreen({
         <Text style={styles.title}>{t.packsTitle}</Text>
         <Text style={styles.subtitle}>{t.packsSubtitle}</Text>
 
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={isPro ? 'Azolla Pro active' : t.proCta}
+          onPress={() => {
+            tapLight();
+            if (!isPro) onOpenPaywall();
+          }}
+          style={({ pressed }) => [styles.proBannerWrap, pressed && !isPro && { opacity: 0.92 }]}
+        >
+          <LinearGradient
+            colors={[p.accentAlpha.a16, p.accentAlpha.a04]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.proBanner}
+          >
+            <View style={styles.proBannerIcon}>
+              <Icon name={isPro ? 'check' : 'crown'} size={18} color={p.color.onAccent} />
+            </View>
+            <View style={styles.proBannerText}>
+              <Text style={styles.proBannerTitle}>
+                {isPro
+                  ? lang === 'th'
+                    ? 'สถานะสมาชิก: Azolla Pro'
+                    : 'Membership: Azolla Pro'
+                  : lang === 'th'
+                    ? 'อัปเกรดเป็น Azolla Pro'
+                    : 'Upgrade to Azolla Pro'}
+              </Text>
+              <Text style={styles.proBannerSub}>
+                {isPro
+                  ? lang === 'th'
+                    ? 'ปลดล็อกครบทุกสำรับ ทุกระดับความลึก และเขียนคำถามเองได้ไม่จำกัด'
+                    : 'All decks, all 10 depth levels, and custom cards unlocked'
+                  : lang === 'th'
+                    ? 'ปลดล็อกครบทั้ง 900 คำถาม · ทุกระดับความลึก 1–10 · เขียนคำถามเอง'
+                    : 'Unlock all 900 questions · Levels 1–10 · Custom deck'}
+              </Text>
+            </View>
+            {!isPro && (
+              <View style={styles.proBannerBtn}>
+                <Text style={styles.proBannerBtnText}>{t.proBadge}</Text>
+              </View>
+            )}
+          </LinearGradient>
+        </Pressable>
+
         <Text style={styles.sectionEyebrow}>{t.themedPacksSection}</Text>
         <View style={styles.packList}>
           {PACK_IDS.map((id) => {
@@ -152,8 +198,8 @@ export function PacksScreen({
                 </View>
                 {locked ? (
                   <View style={styles.proTag}>
-                    <Icon name="crown" size={14} color={p.ink.a55} />
-                    <Text style={styles.proTagText}>{t.locked}</Text>
+                    <Icon name="lock" size={12} color="#d97706" />
+                    <Text style={styles.proTagText}>{t.proBadge}</Text>
                   </View>
                 ) : (
                   <View
@@ -195,8 +241,8 @@ export function PacksScreen({
                 }}
                 style={styles.proTag}
               >
-                <Icon name="crown" size={14} color={p.ink.a55} />
-                <Text style={styles.proTagText}>{t.locked}</Text>
+                <Icon name="lock" size={12} color="#d97706" />
+                <Text style={styles.proTagText}>{t.proBadge}</Text>
               </Pressable>
             )}
             {!customLocked && custom.length > 0 && (
@@ -538,15 +584,17 @@ const makeStyles = (t: Typo, p: Palette) =>
       alignItems: 'center',
       gap: 4,
       paddingVertical: 5,
-      paddingHorizontal: 9,
+      paddingHorizontal: 10,
       borderRadius: radius.pill,
-      backgroundColor: p.surface.s07,
+      backgroundColor: 'rgba(245, 158, 11, 0.14)',
+      borderWidth: 1,
+      borderColor: 'rgba(245, 158, 11, 0.32)',
     },
     proTagText: {
       fontFamily: t.font.sansBold,
-      fontWeight: '600',
+      fontWeight: '700',
       fontSize: 10.5,
-      color: p.ink.a55,
+      color: '#b45309',
     },
     customBox: {
       padding: 16,

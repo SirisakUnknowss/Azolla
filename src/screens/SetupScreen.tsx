@@ -149,7 +149,7 @@ export function SetupScreen({
                 >
                   <View style={styles.bandPillTop}>
                     <Text style={[styles.bandPillRange, on && { color: hue }]}>{b.range}</Text>
-                    {locked && <Icon name="lock" size={13} color={p.ink.a45} />}
+                    {locked && <Icon name="lock" size={12} color="#d97706" />}
                   </View>
                   <Text
                     style={[styles.bandPillLabel, on && { color: p.color.ink, fontWeight: '700' }]}

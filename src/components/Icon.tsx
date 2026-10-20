@@ -12,7 +12,7 @@ import {
   Heart,
   Home,
   Layers,
-  LockKeyhole,
+  Lock,
   MessagesSquare,
   Moon,
   PenLine,
@@ -85,7 +85,7 @@ export function Icon({ name, size = 18, color, strokeWidth = 2 }: Props) {
     case 'flame':
       return <Flame {...common} />;
     case 'lock':
-      return <LockKeyhole {...common} />;
+      return <Lock {...common} />;
     case 'crown':
       return <Crown {...common} />;
     case 'cards':
