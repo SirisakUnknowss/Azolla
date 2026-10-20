@@ -109,52 +109,6 @@ export function PacksScreen({
         <Text style={styles.title}>{t.packsTitle}</Text>
         <Text style={styles.subtitle}>{t.packsSubtitle}</Text>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={isPro ? 'Azolla Pro active' : t.proCta}
-          onPress={() => {
-            tapLight();
-            if (!isPro) onOpenPaywall();
-          }}
-          style={({ pressed }) => [styles.proBannerWrap, pressed && !isPro && { opacity: 0.92 }]}
-        >
-          <LinearGradient
-            colors={[p.accentAlpha.a16, p.accentAlpha.a04]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.proBanner}
-          >
-            <View style={styles.proBannerIcon}>
-              <Icon name={isPro ? 'check' : 'sparkle'} size={18} color={p.color.onAccent} />
-            </View>
-            <View style={styles.proBannerText}>
-              <Text style={styles.proBannerTitle}>
-                {isPro
-                  ? lang === 'th'
-                    ? 'สถานะสมาชิก: Azolla Pro'
-                    : 'Membership: Azolla Pro'
-                  : lang === 'th'
-                    ? 'อัปเกรดเป็น Azolla Pro'
-                    : 'Upgrade to Azolla Pro'}
-              </Text>
-              <Text style={styles.proBannerSub}>
-                {isPro
-                  ? lang === 'th'
-                    ? 'ปลดล็อกครบทุกสำรับ ทุกระดับความลึก และเขียนคำถามเองได้ไม่จำกัด'
-                    : 'All decks, all 10 depth levels, and custom cards unlocked'
-                  : lang === 'th'
-                    ? 'ปลดล็อกครบทั้ง 900 คำถาม · ทุกระดับความลึก 1–10 · เขียนคำถามเอง'
-                    : 'Unlock all 900 questions · Levels 1–10 · Custom deck'}
-              </Text>
-            </View>
-            {!isPro && (
-              <View style={styles.proBannerBtn}>
-                <Text style={styles.proBannerBtnText}>{t.proBadge}</Text>
-              </View>
-            )}
-          </LinearGradient>
-        </Pressable>
-
         <Text style={styles.sectionEyebrow}>{t.themedPacksSection}</Text>
         <View style={styles.packList}>
           {PACK_IDS.map((id) => {
@@ -198,7 +152,7 @@ export function PacksScreen({
                 </View>
                 {locked ? (
                   <View style={styles.proTag}>
-                    <Icon name="lock" size={10} color={p.ink.a55} />
+                    <Icon name="crown" size={14} color={p.ink.a55} />
                     <Text style={styles.proTagText}>{t.locked}</Text>
                   </View>
                 ) : (
@@ -209,7 +163,7 @@ export function PacksScreen({
                     ]}
                   >
                     {on ? (
-                      <Icon name="check" size={12} color={p.color.onAccent} />
+                      <Icon name="check" size={14} color={p.color.onAccent} />
                     ) : (
                       <Text style={[styles.tagText, { color: p.color.accentSoft }]}>
                         {pack.tag}
@@ -241,7 +195,7 @@ export function PacksScreen({
                 }}
                 style={styles.proTag}
               >
-                <Icon name="lock" size={10} color={p.ink.a55} />
+                <Icon name="crown" size={14} color={p.ink.a55} />
                 <Text style={styles.proTagText}>{t.locked}</Text>
               </Pressable>
             )}
@@ -310,7 +264,7 @@ export function PacksScreen({
                       removeCustom(q);
                     }}
                   >
-                    <Icon name="close" size={12} color={p.ink.a45} />
+                    <Icon name="close" size={14} color={p.ink.a45} />
                   </Pressable>
                 </View>
               ))}
@@ -347,7 +301,7 @@ export function PacksScreen({
               <Text style={styles.settingName}>{t.privacyPolicy}</Text>
               <Text style={styles.settingBlurb}>{t.privacyPolicyBlurb}</Text>
             </View>
-            <Icon name="external" size={14} color={p.ink.a55} />
+            <Icon name="external" size={16} color={p.ink.a55} />
           </Pressable>
           <Pressable
             accessibilityRole="link"
@@ -368,7 +322,7 @@ export function PacksScreen({
                   : 'Subscription terms and 18+ mature content policy'}
               </Text>
             </View>
-            <Icon name="external" size={14} color={p.ink.a55} />
+            <Icon name="external" size={16} color={p.ink.a55} />
           </Pressable>
         </View>
 

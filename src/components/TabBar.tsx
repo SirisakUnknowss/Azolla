@@ -63,7 +63,13 @@ export function TabBar({ active, onSelect }: { active: TabId; onSelect: (id: Tab
               ]}
             >
               <View style={styles.tabContent}>
-                <Icon name={iconName} size={15} color={iconColor} bgColor={iconBg} />
+                <Icon
+                  name={iconName}
+                  size={17}
+                  color={iconColor}
+                  bgColor={iconBg}
+                  strokeWidth={on ? 2.25 : 1.9}
+                />
                 <Text style={[styles.label, on && styles.labelOn]} numberOfLines={1}>
                   {names[id]}
                 </Text>

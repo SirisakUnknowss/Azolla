@@ -102,7 +102,7 @@ export function SetupScreen({
             }}
             style={({ pressed }) => [styles.back, pressed && styles.backPressed]}
           >
-            <Icon name="arrow-left" size={14} color={p.ink.a75} />
+            <Icon name="arrow-left" size={16} color={p.ink.a75} />
             <Text style={styles.backGlyph}>{t.back}</Text>
           </Pressable>
 
@@ -149,7 +149,7 @@ export function SetupScreen({
                 >
                   <View style={styles.bandPillTop}>
                     <Text style={[styles.bandPillRange, on && { color: hue }]}>{b.range}</Text>
-                    {locked && <Icon name="lock" size={10} color={p.ink.a45} />}
+                    {locked && <Icon name="lock" size={13} color={p.ink.a45} />}
                   </View>
                   <Text
                     style={[styles.bandPillLabel, on && { color: p.color.ink, fontWeight: '700' }]}
@@ -267,7 +267,7 @@ export function SetupScreen({
                       ]}
                     />
                     <Text style={styles.chipName}>{name}</Text>
-                    <Icon name="close" size={11} color={p.ink.a50} />
+                    <Icon name="close" size={13} color={p.ink.a50} />
                   </Pressable>
                 ))}
               </View>

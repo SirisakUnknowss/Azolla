@@ -9,8 +9,8 @@ import { tapLight } from '../util/haptics';
 
 import { Icon } from './Icon';
 
-/** Crisp iOS-style Light | Dark segmented control with SVG sun and crescent moon icons. */
-export function ThemeToggle() {
+/** Crisp iOS-style Light | Dark segmented control with Lucide Sun & Moon icons. */
+export function ThemeToggle({ compact = false }: { compact?: boolean }) {
   const { t } = useI18n();
   const { mode, setMode, palette: p } = useTheme();
   const styles = useStyles(makeStyles);
@@ -20,7 +20,7 @@ export function ThemeToggle() {
     <View style={styles.shell}>
       {THEME_MODES.map((id) => {
         const on = id === mode;
-        const iconColor = on ? p.color.accent : p.ink.a48;
+        const iconColor = on ? p.color.accent : p.ink.a50;
         return (
           <Pressable
             key={id}
@@ -33,14 +33,21 @@ export function ThemeToggle() {
               tapLight();
               setMode(id);
             }}
-            style={[styles.seg, on && styles.segOn]}
+            style={[
+              styles.seg,
+              compact && styles.segCompact,
+              on && styles.segOn,
+            ]}
           >
             <Icon
               name={id === 'light' ? 'sun' : 'moon'}
-              size={13}
+              size={15}
               color={iconColor}
+              strokeWidth={on ? 2.25 : 1.9}
             />
-            <Text style={[styles.label, on && styles.labelOn]}>{label[id]}</Text>
+            {!compact && (
+              <Text style={[styles.label, on && styles.labelOn]}>{label[id]}</Text>
+            )}
           </Pressable>
         );
       })}
@@ -63,10 +70,15 @@ const makeStyles = (t: Typo, p: Palette) =>
     seg: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 5,
-      paddingVertical: 5,
-      paddingHorizontal: 10,
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 6,
+      paddingHorizontal: 11,
       borderRadius: radius.pill,
+    },
+    segCompact: {
+      paddingVertical: 6,
+      paddingHorizontal: 9,
     },
     segOn: {
       backgroundColor: p.color.card,
@@ -79,7 +91,7 @@ const makeStyles = (t: Typo, p: Palette) =>
     label: {
       fontFamily: t.font.sansMedium,
       fontWeight: '600',
-      fontSize: 11.5,
+      fontSize: 12,
       color: p.ink.a50,
     },
     labelOn: {

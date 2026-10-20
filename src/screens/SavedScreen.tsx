@@ -76,7 +76,7 @@ export function SavedScreen() {
                     >
                       <Icon
                         name={isCopied ? 'check' : 'share'}
-                        size={11}
+                        size={14}
                         color={isCopied ? p.color.accent : p.ink.a60}
                       />
                       <Text

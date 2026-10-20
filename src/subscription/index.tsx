@@ -137,11 +137,10 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       purchase,
       restore,
       unlockPreview,
-      maxLevel: isPro ? 10 : FREE_MAX_LEVEL,
-      isLevelLocked: (level) => !isPro && level > FREE_MAX_LEVEL,
-      isRelationshipLocked: (rel) => !isPro && !FREE_RELATIONSHIPS.includes(rel),
-      isPackLocked: (pack) =>
-        !isPro && (pack === 'custom' || !FREE_PACKS.includes(pack)),
+      maxLevel: 10,
+      isLevelLocked: () => false,
+      isRelationshipLocked: () => false,
+      isPackLocked: () => false,
     }),
     [isPro, ready, packages, purchase, restore, unlockPreview],
   );

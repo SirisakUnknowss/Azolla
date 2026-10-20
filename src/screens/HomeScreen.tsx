@@ -9,7 +9,6 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { BRAND_LOGO, HUES, REL_IMAGES, RELATIONSHIPS, type Relationship } from '../data/decks';
 import { useI18n } from '../i18n';
 import { useStore } from '../state/store';
-import { useSubscription } from '../subscription';
 import { useTheme } from '../theme';
 import { radius, screenPad, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
@@ -19,19 +18,18 @@ import { tapLight } from '../util/haptics';
 type Props = {
   onPickRelationship: (rel: Relationship) => void;
   onStartDaily: (question: string) => void;
-  onOpenPaywall: () => void;
+  onOpenPaywall?: () => void;
 };
 
 const CLASSIC_RELATIONSHIPS = RELATIONSHIPS.filter(
   (id) => id !== 'Dark mode' && id !== 'Sex mode',
 );
 
-export function HomeScreen({ onPickRelationship, onStartDaily, onOpenPaywall }: Props) {
+export function HomeScreen({ onPickRelationship, onStartDaily }: Props) {
   const insets = useSafeAreaInsets();
   const { streak } = useStore();
   const { lang, t, content } = useI18n();
   const { palette: p } = useTheme();
-  const { isPro, isRelationshipLocked } = useSubscription();
   const styles = useStyles(makeStyles);
   const daily = useMemo(() => dailyQuestion(content.daily), [content]);
 
@@ -54,38 +52,12 @@ export function HomeScreen({ onPickRelationship, onStartDaily, onOpenPaywall }: 
           <Image source={BRAND_LOGO} style={styles.brandLogo} resizeMode="cover" />
           <Text style={styles.wordmark}>Azolla</Text>
           <View style={styles.streakPill}>
-            <Icon name="flame" size={12} color={p.color.accent} />
+            <Icon name="flame" size={14} color={p.color.accent} />
             <Text style={styles.streakText}>{streakLabel}</Text>
           </View>
         </View>
         <View style={styles.headerRight}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={isPro ? 'Azolla Pro active' : t.proCta}
-            onPress={() => {
-              tapLight();
-              if (!isPro) onOpenPaywall();
-            }}
-            style={[
-              styles.proHeaderBtn,
-              isPro && { backgroundColor: p.color.accent, borderColor: p.color.accent },
-            ]}
-          >
-            <Icon
-              name={isPro ? 'check' : 'sparkle'}
-              size={11}
-              color={isPro ? p.color.onAccent : p.color.accent}
-            />
-            <Text
-              style={[
-                styles.proHeaderBtnText,
-                isPro && { color: p.color.onAccent },
-              ]}
-            >
-              {isPro ? 'PRO' : t.proBadge}
-            </Text>
-          </Pressable>
-          <ThemeToggle />
+          <ThemeToggle compact />
           <LangToggle />
         </View>
       </View>
@@ -101,7 +73,7 @@ export function HomeScreen({ onPickRelationship, onStartDaily, onOpenPaywall }: 
       >
         <View style={styles.dailyTopRow}>
           <View style={styles.dailyBadge}>
-            <Icon name="sparkle" size={12} color={p.color.accent} />
+            <Icon name="sparkle" size={14} color={p.color.accent} />
             <Text style={styles.dailyEyebrow}>{t.dailyEyebrow}</Text>
           </View>
         </View>
@@ -116,6 +88,7 @@ export function HomeScreen({ onPickRelationship, onStartDaily, onOpenPaywall }: 
           style={({ pressed }) => [styles.dailyCta, pressed && styles.dailyCtaPressed]}
         >
           <Text style={styles.dailyCtaText}>{t.dailyCta}</Text>
+          <Icon name="arrow-right" size={15} color={p.color.onAccent} />
         </Pressable>
       </LinearGradient>
 
@@ -146,7 +119,7 @@ export function HomeScreen({ onPickRelationship, onStartDaily, onOpenPaywall }: 
                 resizeMode="cover"
               />
               <View style={styles.darkBadge}>
-                <Icon name="flame" size={11} color="#ff4d88" />
+                <Icon name="flame" size={13} color="#ff4d88" />
                 <Text style={styles.darkBadgeText}>{t.darkModeBadge}</Text>
               </View>
             </View>
@@ -186,7 +159,7 @@ export function HomeScreen({ onPickRelationship, onStartDaily, onOpenPaywall }: 
                 resizeMode="cover"
               />
               <View style={styles.sexBadge}>
-                <Icon name="heart" size={11} color="#ff5ca8" />
+                <Icon name="heart" size={13} color="#ff5ca8" />
                 <Text style={styles.sexBadgeText}>{t.sexModeBadge}</Text>
               </View>
             </View>
@@ -213,12 +186,11 @@ export function HomeScreen({ onPickRelationship, onStartDaily, onOpenPaywall }: 
           const img = REL_IMAGES[id];
           const name = content.rel[id];
           const blurb = content.blurb[id];
-          const locked = isRelationshipLocked(id);
           return (
             <Pressable
               key={id}
               accessibilityRole="button"
-              accessibilityLabel={locked ? t.lockedA11y(name) : `${name}. ${blurb}`}
+              accessibilityLabel={`${name}. ${blurb}`}
               onPress={() => {
                 tapLight();
                 onPickRelationship(id);
@@ -230,24 +202,17 @@ export function HomeScreen({ onPickRelationship, onStartDaily, onOpenPaywall }: 
             >
               <View style={styles.relCoverWrap}>
                 <Image source={img} style={styles.relCover} resizeMode="cover" />
-                <View style={styles.relBadgePos}>
-                  {locked ? (
-                    <View style={styles.proPill}>
-                      <Icon name="lock" size={10} color="#ffffff" />
-                      <Text style={styles.proPillText}>{t.proBadge}</Text>
-                    </View>
-                  ) : (
-                    <View style={[styles.freePill, { backgroundColor: hue }]}>
-                      <Text style={styles.freePillText}>{t.freeBadge}</Text>
-                    </View>
-                  )}
-                </View>
               </View>
               <View style={[styles.relAccentBar, { backgroundColor: hue }]} />
-              <View style={[styles.relBody, { backgroundColor: soft }]}>
-                <Text style={styles.relName} numberOfLines={1}>
-                  {name}
-                </Text>
+              <View style={styles.relBody}>
+                <View style={styles.relTitleRow}>
+                  <Text style={styles.relName} numberOfLines={1}>
+                    {name}
+                  </Text>
+                  <View style={[styles.deckCountPill, { backgroundColor: soft }]}>
+                    <Text style={[styles.deckCountText, { color: hue }]}>100</Text>
+                  </View>
+                </View>
                 <Text style={styles.relBlurb} numberOfLines={2}>
                   {blurb}
                 </Text>
@@ -263,11 +228,10 @@ export function HomeScreen({ onPickRelationship, onStartDaily, onOpenPaywall }: 
         const img = REL_IMAGES[id];
         const name = content.rel[id];
         const blurb = content.blurb[id];
-        const locked = isRelationshipLocked(id);
         return (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={locked ? t.lockedA11y(name) : `${name}. ${blurb}`}
+            accessibilityLabel={`${name}. ${blurb}`}
             onPress={() => {
               tapLight();
               onPickRelationship(id);
@@ -281,16 +245,11 @@ export function HomeScreen({ onPickRelationship, onStartDaily, onOpenPaywall }: 
             <View style={styles.wideRelBody}>
               <View style={styles.wideRelHeader}>
                 <Text style={styles.relName}>{name}</Text>
-                {locked ? (
-                  <View style={styles.proPill}>
-                    <Icon name="lock" size={10} color="#ffffff" />
-                    <Text style={styles.proPillText}>{t.proBadge}</Text>
-                  </View>
-                ) : (
-                  <View style={[styles.freePill, { backgroundColor: hue }]}>
-                    <Text style={styles.freePillText}>{t.freeBadge}</Text>
-                  </View>
-                )}
+                <View style={[styles.deckCountPill, { backgroundColor: soft }]}>
+                  <Text style={[styles.deckCountText, { color: hue }]}>
+                    {lang === 'th' ? '100 การ์ด' : '100 cards'}
+                  </Text>
+                </View>
               </View>
               <Text style={styles.relBlurb}>{blurb}</Text>
             </View>
@@ -309,7 +268,6 @@ const makeStyles = (t: Typo, p: Palette) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      flexWrap: 'wrap',
       gap: 8,
       marginBottom: 18,
     },
@@ -327,29 +285,12 @@ const makeStyles = (t: Typo, p: Palette) =>
       color: p.color.ink,
     },
     headerRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    proHeaderBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      paddingVertical: 5,
-      paddingHorizontal: 9,
-      borderRadius: radius.pill,
-      backgroundColor: p.accentAlpha.a12,
-      borderWidth: 1,
-      borderColor: p.accentAlpha.a28,
-    },
-    proHeaderBtnText: {
-      fontFamily: t.font.sansBold,
-      fontWeight: '700',
-      fontSize: 10.5,
-      color: p.color.accentSoft,
-    },
     streakPill: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
       paddingVertical: 4,
-      paddingHorizontal: 9,
+      paddingHorizontal: 10,
       borderRadius: radius.pill,
       backgroundColor: p.accentAlpha.a12,
       borderWidth: 1,
@@ -358,7 +299,7 @@ const makeStyles = (t: Typo, p: Palette) =>
     streakText: {
       fontFamily: t.font.sansMedium,
       fontWeight: '600',
-      fontSize: 11,
+      fontSize: 11.5,
       color: p.color.accentSoft,
     },
     title: {
@@ -413,6 +354,9 @@ const makeStyles = (t: Typo, p: Palette) =>
     },
     dailyCta: {
       alignSelf: 'flex-start',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 7,
       paddingVertical: 10,
       paddingHorizontal: 16,
       borderRadius: radius.pill,
@@ -476,7 +420,7 @@ const makeStyles = (t: Typo, p: Palette) =>
       alignItems: 'center',
       gap: 5,
       paddingVertical: 4,
-      paddingHorizontal: 8,
+      paddingHorizontal: 9,
       borderRadius: radius.pill,
       backgroundColor: 'rgba(20, 9, 20, 0.84)',
       borderWidth: 1,
@@ -490,7 +434,7 @@ const makeStyles = (t: Typo, p: Palette) =>
       alignItems: 'center',
       gap: 5,
       paddingVertical: 4,
-      paddingHorizontal: 8,
+      paddingHorizontal: 9,
       borderRadius: radius.pill,
       backgroundColor: 'rgba(31, 6, 24, 0.84)',
       borderWidth: 1,
@@ -562,7 +506,7 @@ const makeStyles = (t: Typo, p: Palette) =>
       borderWidth: 1,
       borderColor: p.surface.borderStrong,
       shadowColor: '#000',
-      shadowOpacity: 0.06,
+      shadowOpacity: 0.05,
       shadowRadius: 10,
       shadowOffset: { width: 0, height: 3 },
       elevation: 2,
@@ -570,59 +514,45 @@ const makeStyles = (t: Typo, p: Palette) =>
     relCardPressed: { opacity: 0.9, borderColor: p.color.accent },
     relCoverWrap: {
       width: '100%',
-      height: 98,
-      position: 'relative',
+      height: 100,
       backgroundColor: p.surface.s06,
     },
     relCover: {
       width: '100%',
       height: '100%',
     },
-    relBadgePos: {
-      position: 'absolute',
-      top: 8,
-      right: 8,
-    },
     relAccentBar: {
       height: 3,
       width: '100%',
     },
-    freePill: {
-      paddingVertical: 3,
-      paddingHorizontal: 8,
-      borderRadius: radius.pill,
+    relBody: {
+      padding: 13,
+      gap: 4,
+      flex: 1,
+      backgroundColor: p.color.card,
     },
-    freePillText: {
-      fontFamily: t.font.sansBold,
-      fontWeight: '700',
-      fontSize: 10,
-      color: '#ffffff',
-    },
-    proPill: {
+    relTitleRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
-      paddingVertical: 3,
-      paddingHorizontal: 8,
-      borderRadius: radius.pill,
-      backgroundColor: 'rgba(18, 22, 31, 0.76)',
+      justifyContent: 'space-between',
+      gap: 6,
     },
-    proPillText: {
+    deckCountPill: {
+      paddingVertical: 2,
+      paddingHorizontal: 7,
+      borderRadius: radius.pill,
+    },
+    deckCountText: {
       fontFamily: t.font.sansBold,
       fontWeight: '700',
       fontSize: 10,
-      color: '#ffffff',
-    },
-    relBody: {
-      padding: 12,
-      gap: 3,
-      flex: 1,
     },
     relName: {
       fontFamily: t.font.sansMedium,
       fontWeight: '700',
       fontSize: 15.5,
       color: p.color.ink,
+      flexShrink: 1,
     },
     relBlurb: {
       fontFamily: t.font.sans,
@@ -639,7 +569,7 @@ const makeStyles = (t: Typo, p: Palette) =>
       borderWidth: 1,
       borderColor: p.surface.borderStrong,
       shadowColor: '#000',
-      shadowOpacity: 0.06,
+      shadowOpacity: 0.05,
       shadowRadius: 10,
       shadowOffset: { width: 0, height: 3 },
       elevation: 2,

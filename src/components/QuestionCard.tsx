@@ -184,7 +184,7 @@ export const QuestionCard = forwardRef<QuestionCardHandle, Props>(function Quest
                 >
                   <Icon
                     name={copied ? 'check' : 'share'}
-                    size={13}
+                    size={15}
                     color={copied ? p.color.accent : p.ink.a70}
                   />
                   <Text
@@ -222,7 +222,7 @@ export const QuestionCard = forwardRef<QuestionCardHandle, Props>(function Quest
                 >
                   <Icon
                     name={saved ? 'bookmark-filled' : 'bookmark'}
-                    size={13}
+                    size={15}
                     color={saved ? '#ffffff' : p.ink.a70}
                     bgColor={saved ? relHue : p.color.card}
                   />
