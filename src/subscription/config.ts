@@ -32,3 +32,15 @@ export const FREE_PACKS: readonly DeckPackId[] = ['first', 'years'];
 
 export const RC_KEY_IOS = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY;
 export const RC_KEY_ANDROID = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY;
+
+/**
+ * Web Payment & License Configuration (100% Free to set up):
+ * - PROMPTPAY_ID: 10-digit Thai phone number or 13-digit National/Tax ID for PromptPay QR.
+ * - WEB_CHECKOUT_URL_YEARLY / MONTHLY: Optional Gumroad / Lemon Squeezy / Stripe payment links.
+ * - GUMROAD_PRODUCT_ID: Optional Gumroad product ID for automatic License Key verification.
+ */
+export const PROMPTPAY_ID = process.env.EXPO_PUBLIC_PROMPTPAY_ID || '';
+export const WEB_CHECKOUT_URL_YEARLY = process.env.EXPO_PUBLIC_CHECKOUT_YEARLY_URL || '';
+export const WEB_CHECKOUT_URL_MONTHLY = process.env.EXPO_PUBLIC_CHECKOUT_MONTHLY_URL || '';
+export const GUMROAD_PRODUCT_ID = process.env.EXPO_PUBLIC_GUMROAD_PRODUCT_ID || '';
+export const SUPPORT_EMAIL = 'sirisak.unknowss@gmail.com';

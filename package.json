@@ -45,6 +45,7 @@
     "build:android": "eas build --platform android --profile production",
     "build:all": "eas build --platform all --profile production",
     "build:web": "expo export --platform web",
+    "gen:code": "node scripts/generate-pro-code.js",
     "doctor": "npx expo-doctor",
     "postinstall": "patch-package"
   },

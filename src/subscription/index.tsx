@@ -1,12 +1,13 @@
 /**
  * Subscription state, and the one hook screens use to ask "is this locked?".
  *
- * The store SDK is native-only: on web, and in any build without SDK keys
- * configured, `configure` is skipped entirely and everyone reads as free. That
- * is deliberate — a missing key should degrade to the free tier, never crash
- * the app or silently unlock paid content.
+ * Supports:
+ * 1. Native App Store / Google Play billing via RevenueCat (`STORE_AVAILABLE === true`)
+ * 2. Web Payment via PromptPay QR / Gumroad / Checkout Link + verified License/Unlock Code
+ *    persisted in AsyncStorage (`@azolla:pro_license_v1`).
  */
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {
   createContext,
   useCallback,
@@ -19,6 +20,7 @@ import { Platform } from 'react-native';
 import Purchases, { type PurchasesPackage } from 'react-native-purchases';
 
 import type { DeckPackId, Relationship } from '../data/decks';
+import { isValidSignedCode, verifyLicenseOrCode } from '../util/license';
 
 import {
   FREE_MAX_LEVEL,
@@ -29,10 +31,12 @@ import {
   RC_KEY_IOS,
 } from './config';
 
+const LICENSE_STORAGE_KEY = '@azolla:pro_license_v1';
+
 /** The key for this platform, or undefined where purchases cannot run at all. */
 const apiKey = Platform.select({ ios: RC_KEY_IOS, android: RC_KEY_ANDROID });
 
-/** Whether a real store is reachable. False on web and in unconfigured builds. */
+/** Whether a real native store is reachable. False on web and in unconfigured builds. */
 export const STORE_AVAILABLE = Platform.OS !== 'web' && !!apiKey;
 
 export type Subscription = {
@@ -44,6 +48,8 @@ export type Subscription = {
   /** Resolves true when the purchase completed and the entitlement is active. */
   purchase: (pkg: PurchasesPackage) => Promise<boolean>;
   restore: () => Promise<boolean>;
+  /** Verifies a Gumroad License Key or signed Azolla Unlock Code and activates Pro if valid. */
+  redeemCode: (code: string) => Promise<boolean>;
   /** Highest depth this user may deal from. */
   maxLevel: number;
   isLevelLocked: (level: number) => boolean;
@@ -55,10 +61,23 @@ const SubscriptionContext = createContext<Subscription | null>(null);
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const [isPro, setIsPro] = useState(false);
-  // Nothing to wait for when there is no store, so an unconfigured build is
-  // ready immediately rather than holding every screen behind a spinner.
   const [ready, setReady] = useState(!STORE_AVAILABLE);
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+
+  // Check persisted Web/License unlock code on mount
+  useEffect(() => {
+    let alive = true;
+    AsyncStorage.getItem(LICENSE_STORAGE_KEY)
+      .then(async (savedCode) => {
+        if (!alive || !savedCode) return;
+        const ok = isValidSignedCode(savedCode) || (await verifyLicenseOrCode(savedCode));
+        if (alive && ok) setIsPro(true);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!STORE_AVAILABLE || !apiKey) return;
@@ -66,8 +85,6 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
     Purchases.configure({ apiKey });
 
-    // The listener covers renewals, cancellations and purchases made outside
-    // the app; the initial read covers the launch itself.
     const listener = (info: { entitlements: { active: Record<string, unknown> } }) => {
       if (alive) setIsPro(!!info.entitlements.active[PRO_ENTITLEMENT]);
     };
@@ -76,10 +93,10 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     Purchases.getCustomerInfo()
       .then((info) => {
         if (!alive) return;
-        setIsPro(!!info.entitlements.active[PRO_ENTITLEMENT]);
+        if (info.entitlements.active[PRO_ENTITLEMENT]) {
+          setIsPro(true);
+        }
       })
-      // A failed lookup means unknown, which has to mean free — never unlock
-      // paid content because the network was down.
       .catch(() => {})
       .finally(() => {
         if (alive) setReady(true);
@@ -105,22 +122,45 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       setIsPro(active);
       return active;
     } catch {
-      // Includes the user simply cancelling, which is not an error worth
-      // surfacing — the paywall just stays open.
       return false;
     }
   }, []);
 
   const restore = useCallback(async () => {
-    if (!STORE_AVAILABLE) return false;
+    if (STORE_AVAILABLE) {
+      try {
+        const info = await Purchases.restorePurchases();
+        const active = !!info.entitlements.active[PRO_ENTITLEMENT];
+        if (active) {
+          setIsPro(true);
+          return true;
+        }
+      } catch {
+        // Fall through to check local saved license
+      }
+    }
     try {
-      const info = await Purchases.restorePurchases();
-      const active = !!info.entitlements.active[PRO_ENTITLEMENT];
-      setIsPro(active);
-      return active;
+      const savedCode = await AsyncStorage.getItem(LICENSE_STORAGE_KEY);
+      if (savedCode && (await verifyLicenseOrCode(savedCode))) {
+        setIsPro(true);
+        return true;
+      }
     } catch {
       return false;
     }
+    return false;
+  }, []);
+
+  const redeemCode = useCallback(async (code: string) => {
+    const ok = await verifyLicenseOrCode(code);
+    if (!ok) return false;
+    try {
+      await AsyncStorage.setItem(LICENSE_STORAGE_KEY, code.trim().toUpperCase());
+    } catch {
+      // Ignore storage error
+    }
+    setIsPro(true);
+    return true;
   }, []);
 
   const value = useMemo<Subscription>(
@@ -130,13 +170,14 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       packages,
       purchase,
       restore,
+      redeemCode,
       maxLevel: isPro ? 10 : FREE_MAX_LEVEL,
       isLevelLocked: (level) => !isPro && level > FREE_MAX_LEVEL,
       isRelationshipLocked: (rel) => !isPro && !FREE_RELATIONSHIPS.includes(rel),
       isPackLocked: (pack) =>
         !isPro && (pack === 'custom' || !FREE_PACKS.includes(pack)),
     }),
-    [isPro, ready, packages, purchase, restore],
+    [isPro, ready, packages, purchase, restore, redeemCode],
   );
 
   return (

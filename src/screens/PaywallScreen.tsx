@@ -1,6 +1,15 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
-import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Image,
+  Linking,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { PurchasesPackage } from 'react-native-purchases';
 
@@ -8,10 +17,17 @@ import { Icon } from '../components/Icon';
 import { BRAND_LOGO } from '../data/decks';
 import { useI18n } from '../i18n';
 import { STORE_AVAILABLE, useSubscription } from '../subscription';
+import {
+  PROMPTPAY_ID,
+  SUPPORT_EMAIL,
+  WEB_CHECKOUT_URL_MONTHLY,
+  WEB_CHECKOUT_URL_YEARLY,
+} from '../subscription/config';
 import { useTheme } from '../theme';
 import { radius, screenPad, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
 import { tapLight, tapMedium } from '../util/haptics';
+import { buildPromptPayPayload } from '../util/promptpay';
 
 /** Annual packages read as yearly; everything else is billed monthly. */
 function isYearly(pkg: PurchasesPackage): boolean {
@@ -26,28 +42,44 @@ export function PaywallScreen({ onClose }: { onClose: () => void }) {
   const { lang, t } = useI18n();
   const { palette: p } = useTheme();
   const styles = useStyles(makeStyles);
-  const { packages, purchase, restore, isPro } = useSubscription();
+  const { packages, purchase, restore, redeemCode, isPro } = useSubscription();
   const [selected, setSelected] = useState<string>('yearly');
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [showWebPay, setShowWebPay] = useState(false);
+  const [licenseInput, setLicenseInput] = useState('');
+  const [notice, setNotice] = useState<{ text: string; isError?: boolean } | null>(null);
 
-  // Default to the yearly plan when the offering has one, which is both the
-  // better deal and the one most people mean to pick.
   useEffect(() => {
     if (packages.length === 0) return;
     const preferred = packages.find(isYearly) ?? packages[0];
     setSelected(preferred.identifier);
   }, [packages]);
 
-  // Nothing left to sell once the entitlement is active.
   useEffect(() => {
     if (isPro) onClose();
   }, [isPro, onClose]);
 
+  const selectedAmount = selected === 'yearly' ? 590 : 99;
+  const selectedPlanLabel =
+    selected === 'yearly'
+      ? lang === 'th'
+        ? 'รายปี (฿590)'
+        : 'Yearly (฿590)'
+      : lang === 'th'
+        ? 'รายเดือน (฿99)'
+        : 'Monthly (฿99)';
+
+  const checkoutUrl =
+    selected === 'yearly' ? WEB_CHECKOUT_URL_YEARLY : WEB_CHECKOUT_URL_MONTHLY;
+
   const buy = async () => {
     if (!STORE_AVAILABLE) {
       tapMedium();
-      setNotice(t.proUnavailable);
+      setNotice(null);
+      if (checkoutUrl) {
+        Linking.openURL(checkoutUrl);
+      }
+      setShowWebPay(true);
       return;
     }
     const pkg = packages.find((x) => x.identifier === selected);
@@ -59,17 +91,66 @@ export function PaywallScreen({ onClose }: { onClose: () => void }) {
     if (ok) onClose();
   };
 
+  const handleRedeem = async () => {
+    const trimmed = licenseInput.trim();
+    if (!trimmed || busy) {
+      setNotice({
+        text:
+          lang === 'th'
+            ? 'กรุณากรอกรหัสปลดล็อก (Unlock Code / License Key) ก่อนกดยืนยัน'
+            : 'Please enter your Unlock Code or License Key first.',
+        isError: true,
+      });
+      return;
+    }
+    tapMedium();
+    setBusy(true);
+    setNotice(null);
+    const ok = await redeemCode(trimmed);
+    setBusy(false);
+    if (ok) {
+      onClose();
+    } else {
+      setNotice({
+        text:
+          lang === 'th'
+            ? 'รหัสปลดล็อกไม่ถูกต้อง กรุณาตรวจสอบรหัสอีกครั้ง'
+            : 'Invalid unlock code or license key. Please check and try again.',
+        isError: true,
+      });
+    }
+  };
+
   const doRestore = async () => {
     if (busy) return;
     tapLight();
-    if (!STORE_AVAILABLE) {
-      setNotice(t.proUnavailable);
-      return;
-    }
     setBusy(true);
     const ok = await restore();
     setBusy(false);
-    setNotice(ok ? t.proRestored : t.proRestoreFailed);
+    if (ok) {
+      setNotice({ text: t.proRestored });
+    } else if (!STORE_AVAILABLE) {
+      setShowWebPay(true);
+      setNotice({
+        text:
+          lang === 'th'
+            ? 'หากมีรหัสปลดล็อกอยู่แล้ว สามารถกรอกในช่องด้านล่างเพื่อกู้คืนสิทธิ์ Pro ได้ทันที'
+            : 'Enter your Unlock Code or License Key below to restore Pro on this device.',
+      });
+    } else {
+      setNotice({ text: t.proRestoreFailed, isError: true });
+    }
+  };
+
+  const sendSlipEmail = () => {
+    tapLight();
+    const subject = encodeURIComponent(`แจ้งชำระเงิน Azolla Pro — แพ็กเกจ${selectedPlanLabel}`);
+    const body = encodeURIComponent(
+      lang === 'th'
+        ? `สวัสดีทีมงาน Azolla,\n\nฉันได้ชำระเงินสมัคร Azolla Pro แพ็กเกจ ${selectedPlanLabel} เรียบร้อยแล้ว (แนบสลิปการโอนเงินมาพร้อมอีเมลฉบับนี้)\n\nรบกวนส่งรหัสปลดล็อก (Unlock Code) ให้ด้วยครับ/ค่ะ`
+        : `Hi Azolla team,\n\nI have completed payment for Azolla Pro (${selectedPlanLabel}). Please find my payment receipt attached and send my Unlock Code.`,
+    );
+    Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`);
   };
 
   const features = [
@@ -83,29 +164,37 @@ export function PaywallScreen({ onClose }: { onClose: () => void }) {
     {
       id: 'yearly',
       yearly: true,
-      price: lang === 'th' ? '฿590 / ปี' : '$19.99 / yr',
-      sub: lang === 'th' ? 'เฉลี่ยเพียง ฿49 / เดือน' : 'Just $1.66 / month',
+      price: lang === 'th' ? '฿590 / ปี' : '฿590 / yr',
+      sub: lang === 'th' ? 'เฉลี่ยเพียง ฿49 / เดือน' : 'Just ฿49 / month',
     },
     {
       id: 'monthly',
       yearly: false,
-      price: lang === 'th' ? '฿99 / เดือน' : '$2.99 / mo',
+      price: lang === 'th' ? '฿99 / เดือน' : '฿99 / mo',
       sub: lang === 'th' ? 'ยกเลิกได้ทุกเมื่อ' : 'Cancel anytime',
     },
   ];
+
+  const qrPayload = PROMPTPAY_ID
+    ? buildPromptPayPayload(PROMPTPAY_ID, selectedAmount)
+    : '';
+  const qrImageUrl = qrPayload
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${encodeURIComponent(qrPayload)}`
+    : '';
 
   return (
     <View style={styles.root}>
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + 18, paddingBottom: insets.bottom + 32 },
+          { paddingTop: insets.top + 18, paddingBottom: insets.bottom + 36 },
         ]}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <View style={styles.proBadge}>
-            <Icon name="sparkle" size={13} color={p.color.accent} />
+            <Icon name="crown" size={14} color="#d97706" />
             <Text style={styles.eyebrow}>{t.proName}</Text>
           </View>
           <Pressable
@@ -234,26 +323,161 @@ export function PaywallScreen({ onClose }: { onClose: () => void }) {
           </View>
         )}
 
-        {notice && (
-          <View style={styles.noticeBox}>
-            <Icon name="lock" size={14} color={p.color.accent} />
-            <Text style={styles.notice}>{notice}</Text>
+        {!showWebPay && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t.proCta}
+            onPress={buy}
+            disabled={busy}
+            style={({ pressed }) => [
+              styles.cta,
+              pressed && styles.ctaPressed,
+              busy && styles.ctaBusy,
+            ]}
+          >
+            <Text style={styles.ctaText}>
+              {!STORE_AVAILABLE
+                ? lang === 'th'
+                  ? `ดำเนินการชำระเงิน · ฿${selectedAmount}`
+                  : `Continue to Payment · ฿${selectedAmount}`
+                : t.proCta}
+            </Text>
+          </Pressable>
+        )}
+
+        {!STORE_AVAILABLE && showWebPay && (
+          <View style={styles.webPayCard}>
+            <Text style={styles.webPayTitle}>
+              {lang === 'th'
+                ? `ชำระเงินแพ็กเกจ${selectedPlanLabel}`
+                : `Complete Payment — ${selectedPlanLabel}`}
+            </Text>
+
+            {qrImageUrl ? (
+              <View style={styles.qrSection}>
+                <View style={styles.qrBox}>
+                  <Image
+                    source={{ uri: qrImageUrl }}
+                    style={styles.qrImage}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text style={styles.qrHint}>
+                  {lang === 'th'
+                    ? `สแกน QR พร้อมเพย์ด้วยแอปธนาคารใดก็ได้ (ยอดชำระ ฿${selectedAmount}.00)`
+                    : `Scan Thai PromptPay QR with any banking app (Amount: ฿${selectedAmount}.00)`}
+                </Text>
+              </View>
+            ) : (
+              <Text style={styles.webPayStep}>
+                {lang === 'th'
+                  ? '1. กดปุ่มด้านล่างเพื่อชำระเงิน หรือแจ้งรับ QR พร้อมเพย์และส่งสลิปเพื่อรับรหัสปลดล็อก (Unlock Code)'
+                  : '1. Click below to complete payment or send your transfer receipt to receive your Unlock Code.'}
+              </Text>
+            )}
+
+            <View style={styles.webPayButtons}>
+              {!!checkoutUrl && (
+                <Pressable
+                  accessibilityRole="link"
+                  onPress={() => {
+                    tapLight();
+                    Linking.openURL(checkoutUrl);
+                  }}
+                  style={({ pressed }) => [
+                    styles.checkoutLinkBtn,
+                    pressed && styles.ctaPressed,
+                  ]}
+                >
+                  <Icon name="external" size={14} color={p.color.onAccent} />
+                  <Text style={styles.checkoutLinkText}>
+                    {lang === 'th'
+                      ? 'ชำระผ่านบัตรเครดิต / ลิงก์ชำระเงินออนไลน์'
+                      : 'Pay via Online Checkout Link'}
+                  </Text>
+                </Pressable>
+              )}
+
+              <Pressable
+                accessibilityRole="button"
+                onPress={sendSlipEmail}
+                style={({ pressed }) => [
+                  styles.slipBtn,
+                  pressed && { backgroundColor: p.surface.s10 },
+                ]}
+              >
+                <Icon name="external" size={14} color={p.color.accent} />
+                <Text style={styles.slipBtnText}>
+                  {lang === 'th'
+                    ? 'ส่งสลิปโอนเงินเพื่อรับรหัสปลดล็อก Pro'
+                    : 'Send Payment Slip to Get Unlock Code'}
+                </Text>
+              </Pressable>
+            </View>
           </View>
         )}
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t.proCta}
-          onPress={buy}
-          disabled={busy}
-          style={({ pressed }) => [
-            styles.cta,
-            pressed && styles.ctaPressed,
-            busy && styles.ctaBusy,
-          ]}
-        >
-          <Text style={styles.ctaText}>{t.proCta}</Text>
-        </Pressable>
+        {!STORE_AVAILABLE && (
+          <View style={styles.redeemBox}>
+            <Text style={styles.redeemLabel}>
+              {lang === 'th'
+                ? 'มีรหัสปลดล็อก (Unlock Code / License Key) แล้ว?'
+                : 'Already have an Unlock Code or License Key?'}
+            </Text>
+            <View style={styles.redeemRow}>
+              <TextInput
+                value={licenseInput}
+                onChangeText={setLicenseInput}
+                onSubmitEditing={handleRedeem}
+                placeholder={lang === 'th' ? 'เช่น AZOLLA-XXXX-XXXX' : 'e.g. AZOLLA-XXXX-XXXX'}
+                placeholderTextColor={p.ink.a40}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                style={styles.redeemInput}
+              />
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleRedeem}
+                disabled={busy}
+                style={({ pressed }) => [
+                  styles.redeemBtn,
+                  pressed && styles.ctaPressed,
+                  busy && styles.ctaBusy,
+                ]}
+              >
+                <Text style={styles.redeemBtnText}>
+                  {lang === 'th' ? 'ยืนยันรหัส' : 'Verify'}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+
+        {notice && (
+          <View
+            style={[
+              styles.noticeBox,
+              notice.isError && {
+                backgroundColor: 'rgba(217, 56, 90, 0.1)',
+                borderColor: 'rgba(217, 56, 90, 0.35)',
+              },
+            ]}
+          >
+            <Icon
+              name={notice.isError ? 'shield' : 'check'}
+              size={15}
+              color={notice.isError ? p.color.danger : p.color.accent}
+            />
+            <Text
+              style={[
+                styles.notice,
+                notice.isError && { color: p.color.danger },
+              ]}
+            >
+              {notice.text}
+            </Text>
+          </View>
+        )}
 
         <View style={styles.footerActions}>
           <Pressable
@@ -321,15 +545,15 @@ const makeStyles = (t: Typo, p: Palette) =>
       paddingVertical: 5,
       paddingHorizontal: 11,
       borderRadius: radius.pill,
-      backgroundColor: p.accentAlpha.a16,
+      backgroundColor: 'rgba(245, 158, 11, 0.14)',
       borderWidth: 1,
-      borderColor: p.accentAlpha.a28,
+      borderColor: 'rgba(245, 158, 11, 0.35)',
     },
     eyebrow: {
       fontFamily: t.font.sansBold,
       fontWeight: '700',
       fontSize: 11.5,
-      color: p.color.accentSoft,
+      color: '#b45309',
       letterSpacing: 0.4,
     },
     closeBtn: {
@@ -347,7 +571,7 @@ const makeStyles = (t: Typo, p: Palette) =>
       borderRadius: radius.xl,
       borderWidth: 1,
       borderColor: p.accentAlpha.a28,
-      marginBottom: 22,
+      marginBottom: 20,
     },
     heroTop: {
       flexDirection: 'row',
@@ -394,7 +618,7 @@ const makeStyles = (t: Typo, p: Palette) =>
       lineHeight: t.line(13.5, 19),
       color: p.color.ink,
     },
-    plans: { gap: 10, marginBottom: 20 },
+    plans: { gap: 10, marginBottom: 18 },
     plan: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -447,6 +671,146 @@ const makeStyles = (t: Typo, p: Palette) =>
       textAlign: 'center',
       marginBottom: 20,
     },
+    cta: {
+      paddingVertical: 16,
+      borderRadius: radius.lg,
+      backgroundColor: p.color.accent,
+      alignItems: 'center',
+      marginBottom: 16,
+      shadowColor: '#000',
+      shadowOpacity: 0.16,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 4,
+    },
+    ctaPressed: { backgroundColor: p.color.accentHover },
+    ctaBusy: { opacity: 0.6 },
+    ctaText: { fontFamily: t.font.sansMedium, fontWeight: '700', fontSize: 16, color: p.color.onAccent },
+    webPayCard: {
+      padding: 16,
+      borderRadius: radius.xl,
+      backgroundColor: p.surface.s045,
+      borderWidth: 1,
+      borderColor: p.accentAlpha.a28,
+      marginBottom: 16,
+      gap: 12,
+    },
+    webPayTitle: {
+      fontFamily: t.font.sansBold,
+      fontWeight: '700',
+      fontSize: 15,
+      color: p.color.ink,
+    },
+    webPayStep: {
+      fontFamily: t.font.sans,
+      fontSize: 13,
+      lineHeight: t.line(13, 19),
+      color: p.ink.a70,
+    },
+    qrSection: {
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 6,
+    },
+    qrBox: {
+      padding: 12,
+      borderRadius: radius.lg,
+      backgroundColor: '#ffffff',
+      borderWidth: 1,
+      borderColor: p.surface.borderStrong,
+    },
+    qrImage: {
+      width: 190,
+      height: 190,
+    },
+    qrHint: {
+      fontFamily: t.font.sansMedium,
+      fontWeight: '600',
+      fontSize: 12.5,
+      color: p.ink.a70,
+      textAlign: 'center',
+    },
+    webPayButtons: {
+      gap: 9,
+    },
+    checkoutLinkBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 13,
+      paddingHorizontal: 16,
+      borderRadius: radius.md,
+      backgroundColor: p.color.accent,
+    },
+    checkoutLinkText: {
+      fontFamily: t.font.sansMedium,
+      fontWeight: '700',
+      fontSize: 14,
+      color: p.color.onAccent,
+    },
+    slipBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: radius.md,
+      backgroundColor: p.surface.s06,
+      borderWidth: 1,
+      borderColor: p.accentAlpha.a28,
+    },
+    slipBtnText: {
+      fontFamily: t.font.sansMedium,
+      fontWeight: '600',
+      fontSize: 13.5,
+      color: p.color.accentSoft,
+    },
+    redeemBox: {
+      padding: 15,
+      borderRadius: radius.xl,
+      backgroundColor: p.surface.s045,
+      borderWidth: 1,
+      borderColor: p.surface.borderStrong,
+      marginBottom: 16,
+      gap: 10,
+    },
+    redeemLabel: {
+      fontFamily: t.font.sansMedium,
+      fontWeight: '600',
+      fontSize: 13,
+      color: p.ink.a75,
+    },
+    redeemRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    redeemInput: {
+      flex: 1,
+      paddingVertical: 10,
+      paddingHorizontal: 13,
+      borderRadius: radius.sm,
+      borderWidth: 1,
+      borderColor: p.surface.borderStrong,
+      backgroundColor: p.surface.s05,
+      color: p.color.ink,
+      fontFamily: t.font.sansMedium,
+      fontSize: 13.5,
+      letterSpacing: 0.6,
+    },
+    redeemBtn: {
+      paddingHorizontal: 16,
+      justifyContent: 'center',
+      borderRadius: radius.sm,
+      backgroundColor: p.color.accent,
+    },
+    redeemBtnText: {
+      fontFamily: t.font.sansBold,
+      fontWeight: '700',
+      fontSize: 13,
+      color: p.color.onAccent,
+    },
     noticeBox: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -467,21 +831,6 @@ const makeStyles = (t: Typo, p: Palette) =>
       lineHeight: t.line(12.5, 18),
       color: p.color.accentSoft,
     },
-    cta: {
-      paddingVertical: 16,
-      borderRadius: radius.lg,
-      backgroundColor: p.color.accent,
-      alignItems: 'center',
-      marginBottom: 16,
-      shadowColor: '#000',
-      shadowOpacity: 0.16,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 4,
-    },
-    ctaPressed: { backgroundColor: p.color.accentHover },
-    ctaBusy: { opacity: 0.6 },
-    ctaText: { fontFamily: t.font.sansMedium, fontWeight: '700', fontSize: 16, color: p.color.onAccent },
     footerActions: {
       flexDirection: 'row',
       flexWrap: 'wrap',
