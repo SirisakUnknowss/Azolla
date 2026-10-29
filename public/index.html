@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<!--
+  The HTML shell for the web export.
+
+  Expo reads this file instead of its own template when it exists (see
+  `getTemplateIndexHtmlAsync` in @expo/cli), so everything the default template
+  carries has to stay: the two percent-wrapped placeholders below, which Expo
+  fills from `web.lang` and `web.name` in app.json, the `expo-reset` style
+  block that react-native-web needs, and `<div id="root">`. Expo appends
+  `theme-color`, `description`, the favicon link and the bundle <script>
+  itself, so none of those are written here.
+
+  Do not write either placeholder's literal name anywhere above the tags that
+  use it: Expo substitutes them with String.replace, which rewrites only the
+  first match, so a mention in this comment is what gets replaced and the real
+  <html lang> and <title> ship with the raw placeholder text in them.
+
+  What this file adds is the share card: a link pasted into Facebook, LINE or X
+  renders as a blank box without og: tags, which is most of the click-through
+  gone. Absolute URLs are required — crawlers do not resolve relative ones —
+  so the domain is hardcoded. Moving off GitHub Pages means changing the five
+  URLs below along with `experiments.baseUrl` in app.json.
+-->
+<html lang="%LANG_ISO_CODE%">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>%WEB_TITLE%</title>
+
+    <link rel="canonical" href="https://sirisakunknowss.github.io/DeepTalk/" />
+
+    <!-- Open Graph: Facebook, LINE, Messenger, Discord, Slack. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Azolla" />
+    <meta property="og:url" content="https://sirisakunknowss.github.io/DeepTalk/" />
+    <meta property="og:title" content="Azolla — การ์ดคำถามชวนคุย 700 ข้อ" />
+    <meta
+      property="og:description"
+      content="คำถามสำหรับคนที่นั่งอยู่ตรงข้ามกัน 9 เด็ค 10 ระดับความลึก ไทย/English เปิดในเบราว์เซอร์ได้เลย ไม่ต้องติดตั้ง"
+    />
+    <meta property="og:image" content="https://sirisakunknowss.github.io/DeepTalk/og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="การ์ดคำถาม Azolla: ลึก ๆ แล้วมีเรื่องอะไรที่เธออยากให้เราทำให้ แต่ไม่กล้าเอ่ยปากขอ?"
+    />
+    <meta property="og:locale" content="th_TH" />
+    <meta property="og:locale:alternate" content="en_US" />
+
+    <!-- X / Twitter reads its own namespace and ignores og: for the card type. -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Azolla — การ์ดคำถามชวนคุย 700 ข้อ" />
+    <meta
+      name="twitter:description"
+      content="คำถามสำหรับคนที่นั่งอยู่ตรงข้ามกัน 9 เด็ค 10 ระดับความลึก ไทย/English ไม่ต้องติดตั้ง"
+    />
+    <meta name="twitter:image" content="https://sirisakunknowss.github.io/DeepTalk/og.png" />
+
+    <meta name="apple-mobile-web-app-title" content="Azolla" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Use static rendering with Expo Router to support running without JavaScript. -->
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+  </body>
+</html>
