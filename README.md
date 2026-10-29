@@ -157,10 +157,10 @@ it is a plain SPA with no routing and no server needed.
 Every push to `master` builds the web export and publishes it to GitHub Pages
 via `.github/workflows/deploy-web.yml`:
 
-**https://sirisakunknowss.github.io/DeepTalk/**
+**https://sirisakunknowss.github.io/Azolla/**
 
 A GitHub Pages project site is served from `/<repo>`, not from the domain root,
-so `experiments.baseUrl` in `app.json` is set to `/DeepTalk` — without it every
+so `experiments.baseUrl` in `app.json` is set to `/Azolla` — without it every
 asset URL in the export would point one directory too high and the page would
 load blank. Change the repo name and that value changes with it. Moving to a
 custom domain (or to EAS Hosting, Vercel, or any host serving from the root)
@@ -239,7 +239,7 @@ npx eas login && npx eas build:configure
   Declare purchase history / identifiers accordingly rather than "no data
   collected", and list RevenueCat as a third party.
 - Privacy policy URL (required by both stores' listing forms) is
-  `https://sirisakunknowss.github.io/DeepTalk/privacy.html` — it's
+  `https://sirisakunknowss.github.io/Azolla/privacy.html` — it's
   `public/privacy.html` in this repo, copied verbatim into the web export and
   deployed alongside the app, and also linked from Packs → App inside the
   app itself.

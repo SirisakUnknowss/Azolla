@@ -127,6 +127,9 @@ const en = {
   privacyPolicy: 'Privacy Policy',
   privacyPolicyBlurb: 'All your cards & data stay on your device',
   privacyPolicyA11y: 'Open the privacy policy in your browser',
+  buyCoffee: 'Buy me a coffee',
+  buyCoffeeBlurb: 'Azolla is made by one person — PromptPay, any amount',
+  buyCoffeeA11y: 'Open the support page in your browser',
   dealFrom: (name: string) => `Start Playing: ${name} →`,
 
   // Subscription
@@ -275,6 +278,9 @@ const th: Dict = {
   privacyPolicy: 'นโยบายความเป็นส่วนตัว',
   privacyPolicyBlurb: 'ข้อมูลทั้งหมดเก็บไว้ในเครื่องของคุณเท่านั้น',
   privacyPolicyA11y: 'เปิดนโยบายความเป็นส่วนตัวในเบราว์เซอร์',
+  buyCoffee: 'เลี้ยงกาแฟคนทำ',
+  buyCoffeeBlurb: 'Azolla ทำคนเดียว โอนพร้อมเพย์เท่าไหร่ก็ได้',
+  buyCoffeeA11y: 'เปิดหน้าเลี้ยงกาแฟในเบราว์เซอร์',
   dealFrom: (name: string) => `เริ่มเล่นแพ็ก: ${name} →`,
 
   // Subscription

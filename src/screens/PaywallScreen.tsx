@@ -27,15 +27,13 @@ import { useTheme } from '../theme';
 import { radius, screenPad, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
 import { tapLight, tapMedium } from '../util/haptics';
+import { PRIVACY_URL, TERMS_URL } from '../util/links';
 import { buildPromptPayPayload } from '../util/promptpay';
 
 /** Annual packages read as yearly; everything else is billed monthly. */
 function isYearly(pkg: PurchasesPackage): boolean {
   return String(pkg.packageType).toUpperCase() === 'ANNUAL';
 }
-
-const PRIVACY_URL = 'https://sirisakunknowss.github.io/DeepTalk/privacy.html';
-const TERMS_URL = 'https://sirisakunknowss.github.io/DeepTalk/terms.html';
 
 export function PaywallScreen({ onClose }: { onClose: () => void }) {
   const insets = useSafeAreaInsets();

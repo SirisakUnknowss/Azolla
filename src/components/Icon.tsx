@@ -5,6 +5,7 @@ import {
   Briefcase,
   Check,
   Clock,
+  Coffee,
   Crown,
   Dices,
   ExternalLink,
@@ -58,6 +59,7 @@ export type IconName =
   | 'arrow-right'
   | 'close'
   | 'external'
+  | 'coffee'
   | 'leaf'
   | 'share'
   | 'shield';
@@ -130,6 +132,8 @@ export function Icon({ name, size = 18, color, strokeWidth = 2 }: Props) {
       return <X {...common} />;
     case 'external':
       return <ExternalLink {...common} />;
+    case 'coffee':
+      return <Coffee {...common} />;
     case 'leaf':
       return <Sprout {...common} />;
     case 'share':

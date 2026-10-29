@@ -1,6 +1,6 @@
 # โพสต์ชุมชน — Azolla
 
-ร่างโพสต์สำหรับกระจายลิงก์เว็บ **https://sirisakunknowss.github.io/DeepTalk/**
+ร่างโพสต์สำหรับกระจายลิงก์เว็บ **https://sirisakunknowss.github.io/Azolla/**
 คำถามทุกข้อในโพสต์คัดมาจาก `src/data/pool/` และ `src/data/content.th.ts` จริง
 (ไม่ได้แต่งใหม่) ฉะนั้นคนที่กดเข้าไปจะเจอของแบบเดียวกับที่อ่านในโพสต์
 
@@ -59,7 +59,7 @@ Family, แพ็ค "คุยกันหลังเที่ยงคืน"
 **คอมเมนต์แรก:**
 
 ```text
-ลิงก์ครับ เปิดในมือถือได้เลย → https://sirisakunknowss.github.io/DeepTalk/
+ลิงก์ครับ เปิดในมือถือได้เลย → https://sirisakunknowss.github.io/Azolla/
 มีภาษาไทยและอังกฤษ สลับได้ในแอป ใครติดอะไรคอมเมนต์ถามได้ครับ
 ```
 
@@ -96,7 +96,7 @@ Family, แพ็ค "คุยกันหลังเที่ยงคืน"
 **คอมเมนต์แรก:**
 
 ```text
-ลิงก์ → https://sirisakunknowss.github.io/DeepTalk/
+ลิงก์ → https://sirisakunknowss.github.io/Azolla/
 ชุดด้านบนอยู่ในแพ็ค "เพิ่งเจอกันคืนแรก" เล่นได้ฟรีครับ
 ```
 
@@ -141,7 +141,7 @@ Family, แพ็ค "คุยกันหลังเที่ยงคืน"
 **คอมเมนต์แรก:**
 
 ```text
-ลิงก์ → https://sirisakunknowss.github.io/DeepTalk/
+ลิงก์ → https://sirisakunknowss.github.io/Azolla/
 สลับไทย/อังกฤษได้ในแอป ถ้ามีผู้เข้าร่วมต่างชาติก็ใช้วงเดียวกันได้ครับ
 ```
 
@@ -164,7 +164,7 @@ Family, แพ็ค "คุยกันหลังเที่ยงคืน"
 ขอแค่ฟีดแบ็กว่าลูกค้าใช้แล้วเป็นยังไง
 
 ถ้าสนใจ ผมส่งไฟล์ QR ขนาดตั้งโต๊ะ (พร้อมพิมพ์) และชุดคำถามตัวอย่าง
-ให้พี่ดูก่อนได้ครับ ลองเปิดดูได้ที่ https://sirisakunknowss.github.io/DeepTalk/
+ให้พี่ดูก่อนได้ครับ ลองเปิดดูได้ที่ https://sirisakunknowss.github.io/Azolla/
 
 ขอบคุณครับ
 ```
@@ -209,7 +209,7 @@ answer leaves your phone. Free up to level 5. Link in the first comment.
 **คอมเมนต์แรก:**
 
 ```text
-Link → https://sirisakunknowss.github.io/DeepTalk/
+Link → https://sirisakunknowss.github.io/Azolla/
 Opens straight in a phone browser. Happy to add question sets if you have a
 situation it doesn't cover.
 ```
@@ -244,7 +244,7 @@ situation it doesn't cover.
 **คอมเมนต์แรก:**
 
 ```text
-ลิงก์ → https://sirisakunknowss.github.io/DeepTalk/
+ลิงก์ → https://sirisakunknowss.github.io/Azolla/
 ```
 
 ---

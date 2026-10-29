@@ -25,6 +25,7 @@ import { useTheme } from '../theme';
 import { radius, screenPad, type Palette, type Typo } from '../theme/tokens';
 import { useStyles } from '../theme/useStyles';
 import { tapLight } from '../util/haptics';
+import { COFFEE_URL, PRIVACY_URL, TERMS_URL } from '../util/links';
 
 function SettingSwitch({
   value,
@@ -49,10 +50,6 @@ function SettingSwitch({
 const TIMER_MIN = 30;
 const TIMER_MAX = 300;
 const TIMER_STEP = 15;
-
-/** Deployed alongside the web build from `public/privacy.html` and `public/terms.html`. */
-const PRIVACY_URL = 'https://sirisakunknowss.github.io/DeepTalk/privacy.html';
-const TERMS_URL = 'https://sirisakunknowss.github.io/DeepTalk/terms.html';
 
 export function PacksScreen({
   onPlayPack,
@@ -356,7 +353,7 @@ export function PacksScreen({
               tapLight();
               Linking.openURL(TERMS_URL);
             }}
-            style={[styles.settingRow, styles.settingRowLast]}
+            style={styles.settingRow}
           >
             <View style={styles.settingText}>
               <Text style={styles.settingName}>
@@ -369,6 +366,21 @@ export function PacksScreen({
               </Text>
             </View>
             <Icon name="external" size={16} color={p.ink.a55} />
+          </Pressable>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={t.buyCoffeeA11y}
+            onPress={() => {
+              tapLight();
+              Linking.openURL(COFFEE_URL);
+            }}
+            style={[styles.settingRow, styles.settingRowLast]}
+          >
+            <View style={styles.settingText}>
+              <Text style={styles.settingName}>{t.buyCoffee}</Text>
+              <Text style={styles.settingBlurb}>{t.buyCoffeeBlurb}</Text>
+            </View>
+            <Icon name="coffee" size={16} color={p.color.accent} />
           </Pressable>
         </View>
 
